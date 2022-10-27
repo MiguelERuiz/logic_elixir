@@ -7,18 +7,22 @@ defmodule LogicElixir do
   # ? Las variables lógicas las representamos con átomos??
   @type t :: {:ground, term()} | {t()} | list(t()) | atom()
 
-  @type sigma :: list(tuple()) | :unmatch # el :unmatch sirve para representar el simbolo ⊥
+  # el :unmatch sirve para representar el simbolo ⊥
+  @type sigma :: list(tuple()) | :unmatch
 
   @spec unify(t(), t(), sigma()) :: sigma()
-  def unify({:ground, t}, {:ground, t}, sigma) do # [ExTerm] rule
+  # [ExTerm] rule
+  def unify({:ground, t}, {:ground, t}, sigma) do
     sigma
   end
 
-  def unify({:ground, t1}, {:ground, t2}, _sigma) when t1 != t2 do # [ExTermFail] Rule
+  # [ExTermFail] Rule
+  def unify({:ground, t1}, {:ground, t2}, _sigma) when t1 != t2 do
     :unmatch
   end
 
-  def unify(t, t, sigma) do # [Id] Rule
+  # [Id] Rule
+  def unify(t, t, sigma) do
     sigma
   end
 
@@ -29,11 +33,14 @@ defmodule LogicElixir do
   def unify([], [], sigma) do
     sigma
   end
-  def unify([head1|tail1], [head2|tail2], sigma) do
-    unify(tail1, tail2, [{head1, head2}|sigma]) # probably it's not okay
+
+  def unify([head1 | tail1], [head2 | tail2], sigma) do
+    # probably it's not okay
+    unify(tail1, tail2, [{head1, head2} | sigma])
   end
 
-  def unify(_t1, _t2, _sigma) do # [Clash] Rule
+  # [Clash] Rule
+  def unify(_t1, _t2, _sigma) do
     :unmatch
   end
 
