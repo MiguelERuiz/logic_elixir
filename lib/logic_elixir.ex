@@ -20,6 +20,13 @@ defmodule LogicElixir do
 
 defguard is_tuple_term(t) when is_tuple(t) and (elem(t, 0) != :ground or is_tuple(elem(t, 1)))
 
+def components_of({:ground, t}) do
+  Tuple.to_list(t)
+end
+def components_of(t) do
+  Tuple.to_list(t)
+end
+
   @spec unify(t(), t(), sigma()) :: sigma()
   # [ExTerm] rule
   def unify({:ground, t}, {:ground, t}, sigma), do: sigma
@@ -35,7 +42,10 @@ defguard is_tuple_term(t) when is_tuple(t) and (elem(t, 0) != :ground or is_tupl
 
   # [Tuple] Rule
   # TODO not a valid implementation
-  def unify(t1, t2, sigma) when is_tuple_term(t1) and is_tuple_term(t2), do: sigma
+  def unify(t1, t2, sigma) when is_tuple_term(t1) and is_tuple_term(t2) do
+    c1 = components_of(t1)
+    c2 = components_of(t2)
+  end
 
   # [List] Rule
   # TODO not a valid implementation
