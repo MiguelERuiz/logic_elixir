@@ -18,6 +18,8 @@ defmodule LogicElixir do
   # Functions #
   #############
 
+defguard is_tuple_term(t) when is_tuple(t) and (elem(t, 0) != :ground or is_tuple(elem(t, 1)))
+
   @spec unify(t(), t(), sigma()) :: sigma()
   # [ExTerm] rule
   def unify({:ground, t}, {:ground, t}, sigma), do: sigma
@@ -26,14 +28,14 @@ defmodule LogicElixir do
   def unify({:ground, _}, {:ground, _}, _sigma), do: :unmatch
 
   # [Var1] [Var2] Rules
-  def unify(t1, t2, sigma) when is_atom(t1) or is_atom(t2), do: unify_variable(t1, t2, sigma)
+  def unify(t1, t2, sigma) when is_atom(t1), do: unify_variable(t1, t2, sigma)
 
   # [Id] Rule
   def unify(t, t, sigma) when is_atom(t), do: sigma
 
   # [Tuple] Rule
   # TODO not a valid implementation
-  def unify(t, t, sigma) when is_tuple(t), do: sigma
+  def unify(t1, t2, sigma) when is_tuple_term(t1) and is_tuple_term(t2), do: sigma
 
   # [List] Rule
   # TODO not a valid implementation
