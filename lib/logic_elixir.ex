@@ -8,11 +8,12 @@ defmodule LogicElixir do
   #########
 
   # TODO add map() as part of t() definition
-  @type t :: {:ground, term()} | {t()} | [t()] | atom()
+  @type t :: {:ground, term()} | tuple() | [t()] | atom()
 
   # sigma could be either a map to keep the substitutions or
   # :unmatch atom to represent ⊥ symbol
-  @type sigma :: %{t() => t()} | :unmatch
+  @type sigma :: %{atom() => t()} | :unmatch
+
 
   #############
   # Functions #
@@ -35,10 +36,28 @@ end
   def unify({:ground, _}, {:ground, _}, _sigma), do: :unmatch
 
   # [Var1] [Var2] Rules
-  def unify(t1, t2, sigma) when is_atom(t1), do: unify_variable(t1, t2, sigma)
+  def unify(t1, t2, sigma) when is_atom(t1) do
+    case is_logic_var?(t1) do
+      true -> unify_variable(t1, t2, sigma)
+      false -> :unmatch
+    end
+  end
 
   # [Id] Rule
-  def unify(t, t, sigma) when is_atom(t), do: sigma
+  def unify(t, t, sigma) when is_atom(t) do
+    case is_logic_var?(t) do
+      true -> sigma
+      false -> :unmatch
+    end
+  end
+
+  # [Orient] Rule
+  def unify(t1, t2, sigma) when is_atom(t2) do
+    case is_logic_var?(t2) do
+      true -> unify(t2, t1, sigma)
+      false -> :unmatch
+    end
+  end
 
   # [Tuple] Rule
   # TODO not a valid implementation
@@ -48,20 +67,25 @@ end
   end
 
   # [List] Rule
-  # TODO not a valid implementation
-  def unify(t, t, sigma) when is_list(t), do: sigma
+  # TODO check if its correct
+  def unify([h1, t1], [h2, t2], sigma) do
+    case unify(h1, h2, sigma) do
+      :unmatch -> :unmatch
+      sigma1 -> unify(t1, t2, sigma1)
+    end
+  end
 
   # [Clash] Rule
   def unify(_t1, _t2, _sigma), do: :unmatch
 
   # TODO faltan:
   # Occurs-check
-  # Orient
 
   #####################
   # Private Functions #
   #####################
 
+  # TODO Not only unify/3 but make the possible substitutions
   @spec unify_variable(t(), t(), sigma()) :: sigma()
   defp unify_variable(t1, t2, sigma) when is_atom(t1) do
     case Map.fetch(sigma, t1) do
@@ -70,10 +94,11 @@ end
     end
   end
 
-  defp unify_variable(t1, t2, sigma) when is_atom(t2) do
-    case Map.fetch(sigma, t2) do
-      {:ok, subt} -> unify(t1, subt, sigma)
-      :error -> Map.put(sigma, t2, t1)
+  @spec is_logic_var?(atom()) :: boolean()
+  defp is_logic_var?(t) do
+    case :erlang.atom_to_binary(t) do
+      <<"Elixir.", _::binary>> -> true
+      _ -> false
     end
   end
 end
