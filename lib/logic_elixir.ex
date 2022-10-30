@@ -3,6 +3,8 @@ defmodule LogicElixir do
   Documentation for `LogicElixir`.
   """
 
+  require Logger
+
   #########
   # Types #
   #########
@@ -64,7 +66,8 @@ defmodule LogicElixir do
 
   # [List] Rule
   def unify([], [], sigma), do: sigma
-  def unify([h1, t1], [h2, t2], sigma) do
+  def unify([h1 | t1], [h2 | t2], sigma) do
+    Logger.info("[LIST] h1: #{inspect(h1)} h2: #{inspect(h2)}")
     case unify(h1, h2, sigma) do
       :unmatch -> :unmatch
       sigma1 -> unify(t1, t2, sigma1)

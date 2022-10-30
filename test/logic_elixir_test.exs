@@ -31,6 +31,7 @@ defmodule LogicElixirTest do
 
   test "Verifies [List] rule" do
     assert LogicElixir.unify([], [], %{}) == %{}
+    assert LogicElixir.unify([{:ground, 1}, {:ground, 2}, {:ground, 3}], [{:ground, 1}, {:ground, 2}, {:ground, 3}], %{}) == %{}
     assert LogicElixir.unify([{:ground, 1}, {:ground, 2}, {:ground, 3}], [X, Y, Z], %{}) == %{'Elixir.X': 1, 'Elixir.Y': 2, 'Elixir.Z': 3}
   end
 
