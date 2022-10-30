@@ -14,19 +14,15 @@ defmodule LogicElixir do
   # :unmatch atom to represent ⊥ symbol
   @type sigma :: %{atom() => t()} | :unmatch
 
+  ##########
+  # Guards #
+  ##########
+
+  defguard is_tuple_term(t) when is_tuple(t) and (elem(t, 0) != :ground or is_tuple(elem(t, 1)))
 
   #############
   # Functions #
   #############
-
-defguard is_tuple_term(t) when is_tuple(t) and (elem(t, 0) != :ground or is_tuple(elem(t, 1)))
-
-def components_of({:ground, t}) do
-  Tuple.to_list(t)
-end
-def components_of(t) do
-  Tuple.to_list(t)
-end
 
   @spec unify(t(), t(), sigma()) :: sigma()
   # [ExTerm] rule
@@ -93,6 +89,10 @@ end
       :error -> Map.put(sigma, t1, t2)
     end
   end
+
+  @spec components_of(tuple()) :: [term()]
+  defp components_of({:ground, t}), do: Tuple.to_list(t)
+  defp components_of(t), do: Tuple.to_list(t)
 
   @spec is_logic_var?(atom()) :: boolean()
   defp is_logic_var?(t) do
