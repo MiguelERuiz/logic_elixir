@@ -28,7 +28,7 @@ defmodule LogicElixirTest do
     assert unify(Y, X, %{}) == %{'Elixir.Y': X}
     assert unify(X, {:ground, 3}, %{}) == %{'Elixir.X': 3}
     assert unify({:ground, 3}, X, %{}) == %{'Elixir.X': 3}
-    assert unify({X, X}, {:ground, {5, 5}}, %{}) == %{'Elixir.X': 5}
+    assert unify({X, X}, {:ground, {5, 5}}, %{}) == %{'Elixir.X': {5, 5}} # ? I don't think this test is correct
   end
 
   test "Verifies [List] rule" do
