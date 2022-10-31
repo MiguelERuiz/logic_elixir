@@ -86,6 +86,12 @@ defmodule LogicElixir do
 
   # TODO Not only unify/3 but make the possible substitutions (Occurs-check)
   @spec unify_variable(t(), t(), sigma()) :: sigma()
+  defp unify_variable(t1, {:ground, t2}, sigma) do
+    case Map.fetch(sigma, t1) do
+      {:ok, subt} -> unify(subt, t2, sigma)
+      :error -> Map.put(sigma, t1, t2)
+    end
+  end
   defp unify_variable(t1, t2, sigma) do
     case Map.fetch(sigma, t1) do
       {:ok, subt} -> unify(subt, t2, sigma)
