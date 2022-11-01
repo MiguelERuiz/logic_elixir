@@ -10,11 +10,15 @@ defmodule LogicElixirTest do
     assert unify({:ground, "hello"}, {:ground, "hello"}, %{}) == %{}
     assert unify({:ground, true}, {:ground, true}, %{}) == %{}
     assert unify({:ground, false}, {:ground, false}, %{}) == %{}
+    assert unify({:ground, [1, 2, 3]}, {:ground, [1, 2, 3]}, %{}) == %{}
+    assert unify({:ground, {:a, :b, :c}}, {:ground, {:a, :b, :c}}, %{}) == %{}
   end
 
   test "Verifies [ExTermFail] rule" do
     assert unify({:ground, 3}, {:ground, 5}, %{}) == :unmatch
     assert unify({:ground, :a}, {:ground, :b}, %{}) == :unmatch
+    assert unify({:ground, [1, 2, 3]}, {:ground, [4, 5, 6]}, %{}) == :unmatch
+    assert unify({:ground, {:a, :b, :c}}, {:ground, {:d, :e, :f}}, %{}) == :unmatch
   end
 
   test "Verifies [Id] rule" do
