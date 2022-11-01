@@ -31,6 +31,13 @@ defmodule LogicElixirTest do
     assert unify({X, X}, {:ground, {5, 5}}, %{}) == %{'Elixir.X': {5, 5}} # ? I don't think this test is correct
   end
 
+  test "Verifies [Tuple] rule" do
+    assert unify({{:ground, 1}, {:ground, 2}}, {{:ground, 1}, {:ground, 2}}, %{}) == %{}
+    assert unify({X, Y}, {{:ground, 1}, {:ground, 2}}, %{}) == %{'Elixir.X': 1, 'Elixir.Y': 2}
+    assert unify({X, Y}, {[{:ground, 1}, {:ground, 2}], [{:ground, 3}, {:ground, 4}]}, %{}) == %{'Elixir.X': [1, 2], 'Elixir.Y': [3, 4]}
+    assert unify({T, S}, {{:ground, 1}, [X, Y, Z]}, %{}) == %{'Elixir.T': 1, 'Elixir.S': [X, Y, Z]}
+  end
+
   test "Verifies [List] rule" do
     assert unify([], [], %{}) == %{}
     assert unify([{:ground, 1}, {:ground, 2}, {:ground, 3}], [{:ground, 1}, {:ground, 2}, {:ground, 3}], %{}) == %{}
