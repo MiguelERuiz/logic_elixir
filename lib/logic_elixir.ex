@@ -10,7 +10,8 @@ defmodule LogicElixir do
   #########
 
   # TODO add map() as part of t() definition
-  @type t :: {:ground, term()} | tuple() | [t()] | atom()
+  @type t :: tuple_term() | [t()] | atom()
+  @type tuple_term :: {:ground, term()} | tuple()
 
   # sigma could be either a map to keep the substitutions or
   # :unmatch atom to represent ⊥ symbol
@@ -68,7 +69,6 @@ defmodule LogicElixir do
   def unify([], [], sigma), do: sigma
 
   def unify([h1 | t1], [h2 | t2], sigma) do
-    Logger.info("[LIST] h1: #{inspect(h1)} h2: #{inspect(h2)}")
     case unify(h1, h2, sigma) do
       :unmatch -> :unmatch
       sigma1 -> unify(t1, t2, sigma1)
@@ -88,7 +88,6 @@ defmodule LogicElixir do
   # TODO Not only unify/3 but make the possible substitutions (Occurs-check)
   @spec unify_variable(t(), t(), sigma()) :: sigma()
   defp unify_variable(t1, {:ground, t2}, sigma) do
-    Logger.info("[unifiy_var] sigma #{inspect(sigma)}")
     case Map.fetch(sigma, t1) do
       {:ok, _subt} -> sigma
       :error -> Map.put(sigma, t1, t2)
@@ -97,15 +96,14 @@ defmodule LogicElixir do
 
   defp unify_variable(t1, t2, sigma) do
     case Map.fetch(sigma, t1) do
-      {:ok, subt} -> unify(subt, t2, sigma)
+      {:ok, _subt} -> sigma
       :error -> Map.put(sigma, t1, t2)
     end
   end
 
-  @spec components_of(tuple()) :: [term()] | term()
-  defp components_of({:ground, t}) when is_tuple(t), do: Tuple.to_list(t)
-  defp components_of({:ground, t}), do: t
-  defp components_of(t), do: Tuple.to_list(t)
+  @spec components_of(tuple()) :: [term()]
+  defp components_of({:ground, t}), do: Tuple.to_list(t)
+  defp components_of(t) when is_tuple(t), do: Tuple.to_list(t)
 
   @spec is_logic_var?(atom()) :: boolean()
   defp is_logic_var?(t) do

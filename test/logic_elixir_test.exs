@@ -32,14 +32,13 @@ defmodule LogicElixirTest do
     assert unify(Y, X, %{}) == %{'Elixir.Y': X}
     assert unify(X, {:ground, 3}, %{}) == %{'Elixir.X': 3}
     assert unify({:ground, 3}, X, %{}) == %{'Elixir.X': 3}
-    assert unify({X, X}, {:ground, {5, 5}}, %{}) == %{'Elixir.X': {5, 5}} # ? I don't think this test is correct
+    assert unify({X, X}, {:ground, {5, 5}}, %{}) == %{'Elixir.X': 5}
   end
 
   test "Verifies [Tuple] rule" do
-    assert unify({{:ground, 1}, {:ground, 2}}, {{:ground, 1}, {:ground, 2}}, %{}) == %{}
-    assert unify({X, Y}, {{:ground, 1}, {:ground, 2}}, %{}) == %{'Elixir.X': 1, 'Elixir.Y': 2}
-    assert unify({X, Y}, {[{:ground, 1}, {:ground, 2}], [{:ground, 3}, {:ground, 4}]}, %{}) == %{'Elixir.X': [1, 2], 'Elixir.Y': [3, 4]}
-    assert unify({T, S}, {{:ground, 1}, [X, Y, Z]}, %{}) == %{'Elixir.T': 1, 'Elixir.S': [X, Y, Z]}
+    assert unify({X, Y}, {:ground, {1, 2}}, %{}) == %{'Elixir.X': 1, 'Elixir.Y': 2}
+    assert unify({X, Y}, {:ground, {[1, 2], [3, 4]}}, %{}) == %{'Elixir.X': [1, 2], 'Elixir.Y': [3, 4]}
+    assert unify({T, S}, {:ground, {1, [X, Y, Z]}}, %{}) == %{'Elixir.T': 1, 'Elixir.S': [X, Y, Z]}
   end
 
   test "Verifies [List] rule" do
@@ -47,7 +46,7 @@ defmodule LogicElixirTest do
     assert unify([{:ground, 1}, {:ground, 2}, {:ground, 3}], [{:ground, 1}, {:ground, 2}, {:ground, 3}], %{}) == %{}
     assert unify([{:ground, 1}, {:ground, 2}, {:ground, 3}], [X, Y, Z], %{}) == %{'Elixir.X': 1, 'Elixir.Y': 2, 'Elixir.Z': 3}
     assert unify([X, X], [{:ground, 5}, {:ground, 5}], %{}) == %{'Elixir.X': 5}
-    assert unify([Y, X, Z], [{:ground, 5}, {Y, {:ground, 3}}, {:ground, :a}], %{}) == %{'Elixir.Y': 5, 'Elixir.X': {5, 3}, 'Elixir.Z': :a}
+    assert unify([Y, X, Z], [{:ground, 5}, {:ground, {Y, 3}}, {:ground, :a}], %{}) == %{'Elixir.Y': 5, 'Elixir.X': {5, 3}, 'Elixir.Z': :a}
   end
 
   test "Verifies [Clash] rule" do
