@@ -90,15 +90,21 @@ defmodule LogicElixir do
   defp unify_variable(t1, {:ground, t2}, sigma) do
     case Map.fetch(sigma, t1) do
       {:ok, _subt} -> sigma
-      :error -> Map.put(sigma, t1, t2)
+      :error -> occurs_check(Map.put(sigma, t1, t2))
     end
   end
 
   defp unify_variable(t1, t2, sigma) do
     case Map.fetch(sigma, t1) do
       {:ok, _subt} -> sigma
-      :error -> Map.put(sigma, t1, t2)
+      :error -> occurs_check(Map.put(sigma, t1, t2))
     end
+  end
+
+  # TODO
+  @spec occurs_check(sigma()) :: sigma()
+  defp occurs_check(sigma) do
+    sigma
   end
 
   @spec components_of(tuple()) :: [term()]
