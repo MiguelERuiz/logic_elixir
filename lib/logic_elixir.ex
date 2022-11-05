@@ -90,7 +90,7 @@ defmodule LogicElixir do
   defp unify_variable(t1, {:ground, t2}, sigma) do
     case Map.fetch(sigma, t1) do
       {:ok, _subt} -> sigma
-      :error -> occurs_check(Map.put(sigma, t1, t2))
+      :error -> occurs_check(Map.put(sigma, t1, {:ground, t2}))
     end
   end
 
