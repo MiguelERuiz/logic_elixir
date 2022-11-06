@@ -33,6 +33,9 @@ defmodule LogicElixirTest do
     assert unify(X, {:ground, 3}, %{}) == %{'Elixir.X': {:ground, 3}}
     assert unify({:ground, 3}, X, %{}) == %{'Elixir.X': {:ground, 3}}
     assert unify({X, X}, {{:ground, 5}, {:ground, 5}}, %{}) == %{'Elixir.X': {:ground, 5}}
+    assert unify(X, {X, {:ground, 3}}, %{}) == %{'Elixir.X': {X, {:ground, 3}}}
+    assert unify(X, [X, {:ground, 3}], %{}) == %{'Elixir.X': [X, {:ground, 3}]}
+    assert unify(Y, [X, Z], %{}) == %{'Elixir.Y': [X, Z]}
   end
 
   test "Verifies [Tuple] rule" do

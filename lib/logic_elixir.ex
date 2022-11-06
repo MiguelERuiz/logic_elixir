@@ -78,9 +78,6 @@ defmodule LogicElixir do
   # [Clash] Rule
   def unify(_t1, _t2, _sigma), do: :unmatch
 
-  # TODO faltan:
-  # Occurs-check
-
   #####################
   # Private Functions #
   #####################
