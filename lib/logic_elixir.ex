@@ -17,6 +17,8 @@ defmodule LogicElixir do
   # :unmatch atom to represent ⊥ symbol
   @type sigma :: %{atom() => t()} | :unmatch
 
+  @type vars_set :: MapSet.t(t())
+
   ##########
   # Guards #
   ##########
@@ -81,6 +83,22 @@ defmodule LogicElixir do
   #####################
   # Private Functions #
   #####################
+
+  @spec vars(sigma(), t()) :: vars_set()
+  def vars(_sigma, {:ground, _}), do: MapSet.new()
+  def vars(sigma, t) when is_tuple(t) do
+    c = components_of(t)
+    vars(sigma, c)
+  end
+  def vars(sigma, t) when is_list(t) do
+    List.foldl(t, MapSet.new(), fn tx, acc -> MapSet.union(vars(sigma, tx), acc) end)
+  end
+  def vars(sigma, t) do
+    case Map.fetch(sigma, t) do
+      {:ok, subt} -> vars(sigma, subt)
+      :error -> MapSet.new([t])
+    end
+  end
 
   # TODO Not only unify/3 but make the possible substitutions (Occurs-check)
   @spec unify_variable(t(), t(), sigma()) :: sigma()
