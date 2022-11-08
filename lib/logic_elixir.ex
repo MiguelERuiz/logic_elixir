@@ -46,6 +46,7 @@ defmodule LogicElixir do
 
   # [Var1] [Var2] Rules
   def unify(t1, t2, sigma) when is_atom(t1) do
+    Logger.info("[Var] t1: #{inspect(t1)} t2: #{inspect(t2)} sigma: #{inspect(sigma)}")
     case is_logic_var?(t1) do
       true -> unify_variable(t1, t2, sigma)
       false -> :unmatch
@@ -88,6 +89,7 @@ defmodule LogicElixir do
   def vars(_sigma, {:ground, _}), do: MapSet.new()
   def vars(sigma, t) when is_tuple(t) do
     c = components_of(t)
+    Logger.info("[vars] c: #{inspect(c)}")
     vars(sigma, c)
   end
   def vars(sigma, t) when is_list(t) do
@@ -103,23 +105,24 @@ defmodule LogicElixir do
   # TODO Not only unify/3 but make the possible substitutions (Occurs-check)
   @spec unify_variable(t(), t(), sigma()) :: sigma()
   defp unify_variable(t1, {:ground, t2}, sigma) do
+    Logger.info("[Unify Exterm] t1: #{inspect(t1)} t2: #{inspect({:ground, t2})} sigma: #{inspect(sigma)}")
     case Map.fetch(sigma, t1) do
-      {:ok, _subt} -> sigma
-      :error -> occurs_check(Map.put(sigma, t1, {:ground, t2}))
+      {:ok, subt} ->
+        Logger.info("[Unify Exterm] Map.fetch(sigma, t1) -> #{inspect(subt)}")
+        sigma
+      :error -> Map.put(sigma, t1, {:ground, t2})
     end
   end
 
   defp unify_variable(t1, t2, sigma) do
+    Logger.info("[Unify Variable] t1: #{inspect(t1)} t2: #{inspect(t2)} sigma: #{inspect(sigma)}")
+    Logger.info("vars of t2: #{inspect(vars(sigma, t2))}")
     case Map.fetch(sigma, t1) do
-      {:ok, _subt} -> sigma
-      :error -> occurs_check(Map.put(sigma, t1, t2))
+      {:ok, subt} ->
+        Logger.info("[Unify Variable] Map.fetch(sigma, t1) -> #{inspect(subt)}")
+        sigma
+      :error -> Map.put(sigma, t1, t2)
     end
-  end
-
-  # TODO
-  @spec occurs_check(sigma()) :: sigma()
-  defp occurs_check(sigma) do
-    sigma
   end
 
   @spec components_of(tuple()) :: [term()]
