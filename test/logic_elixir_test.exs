@@ -42,6 +42,7 @@ defmodule LogicElixirTest do
     assert unify({X, Y}, {:ground, {1, 2}}, %{}) == %{'Elixir.X': 1, 'Elixir.Y': 2}
     assert unify({X, Y}, {{:ground, [1, 2]}, {:ground, [3, 4]}}, %{}) == %{'Elixir.X': {:ground, [1, 2]}, 'Elixir.Y': {:ground, [3, 4]}}
     assert unify({T, S}, {{:ground, 1}, [X, Y, Z]}, %{}) == %{'Elixir.T': {:ground, 1}, 'Elixir.S': [X, Y, Z]}
+    assert unify({X, Y}, {Y, {:ground, 5}}, %{}) == %{'Elixir.X': Y, 'Elixir.Y': {:ground, 5}}
   end
 
   test "Verifies [List] rule" do
