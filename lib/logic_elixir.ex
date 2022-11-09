@@ -102,7 +102,7 @@ defmodule LogicElixir do
     end
   end
 
-  # TODO Not only unify/3 but make the possible substitutions (Occurs-check)
+  # TODO Not only unify/3 but make the possible substitutions
   @spec unify_variable(t(), t(), sigma()) :: sigma()
   defp unify_variable(t1, {:ground, t2}, sigma) do
     Logger.info("[Unify Exterm] t1: #{inspect(t1)} t2: #{inspect({:ground, t2})} sigma: #{inspect(sigma)}")

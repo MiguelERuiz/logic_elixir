@@ -50,7 +50,8 @@ defmodule LogicElixirTest do
     assert unify([{:ground, 1}, {:ground, 2}, {:ground, 3}], [{:ground, 1}, {:ground, 2}, {:ground, 3}], %{}) == %{}
     assert unify([{:ground, 1}, {:ground, 2}, {:ground, 3}], [X, Y, Z], %{}) == %{'Elixir.X': {:ground, 1}, 'Elixir.Y': {:ground, 2}, 'Elixir.Z': {:ground, 3}}
     assert unify([X, X], [{:ground, 5}, {:ground, 5}], %{}) == %{'Elixir.X': {:ground, 5}}
-    assert unify([Y, X, Z], [{:ground, 5}, {Y, {:ground, 3}}, {:ground, :a}], %{}) == %{'Elixir.Y': {:ground, 5}, 'Elixir.X': {{:ground, 5}, {:ground, 3}}, 'Elixir.Z': {:ground, :a}}
+    assert unify([X, Y], [{:ground, 5}, {X, {:ground, 3}}], %{}) == %{'Elixir.X': {:ground, 5}, 'Elixir.Y': {{:ground, 5}, {:ground, 3}}}
+    assert unify([X, Y, Z], [{:ground, 5}, {X, {:ground, 3}}, {:ground, :a}], %{}) == %{'Elixir.Y': {:ground, 5}, 'Elixir.X': {{:ground, 5}, {:ground, 3}}, 'Elixir.Z': {:ground, :a}}
   end
 
   test "Verifies [Clash] rule" do
