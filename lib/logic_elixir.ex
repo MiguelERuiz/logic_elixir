@@ -10,14 +10,16 @@ defmodule LogicElixir do
   #########
 
   # TODO add map() as part of t() definition
-  @type t :: tuple_term() | [t()] | atom()
+  @type t :: logic_var() | tuple_term() | [t()]
+  @type logic_var :: {:var, String.t()}
   @type tuple_term :: {:ground, term()} | tuple()
 
   # sigma could be either a map to keep the substitutions or
   # :unmatch atom to represent ⊥ symbol
-  @type sigma :: %{atom() => t()} | :unmatch
+  @type sigma :: %{String.t() => t()} | :unmatch
 
-  @type vars_set :: MapSet.t(t())
+  # vars_set is a MapSet of terms of LogicElixir.t() type
+  @type vars_set :: MapSet.t(logic_var())
 
   ##########
   # Guards #
@@ -37,28 +39,26 @@ defmodule LogicElixir do
   def unify({:ground, _}, {:ground, _}, _sigma), do: :unmatch
 
   # [Id] Rule
-  def unify(t, t, sigma) when is_atom(t) do
-    case is_logic_var?(t) do
-      true -> sigma
-      false -> :unmatch
-    end
+  def unify({:var, x}, {:var, x}, sigma), do: sigma
+
+  # [Var1] Rule
+  def unify({:var, x}, t, sigma) when is_map_key(sigma, x) do
+    unify(sigma[x], t, sigma)
   end
 
-  # [Var1] [Var2] Rules
-  def unify(t1, t2, sigma) when is_atom(t1) do
-    Logger.info("[Var] t1: #{inspect(t1)} t2: #{inspect(t2)} sigma: #{inspect(sigma)}")
-    case is_logic_var?(t1) do
-      true -> unify_variable(t1, t2, sigma)
-      false -> :unmatch
+  # [Var2] and [Occurs-check] Rules
+  def unify({:var, x}, t, sigma) when not is_map_key(sigma, x) do
+    # Logger.info("[Var] t1: #{inspect(t1)} t2: #{inspect(t2)} sigma: #{inspect(sigma)}")
+    if x in vars(sigma, t) do
+      :unmatch
+    else
+      unify_variable(x, t, sigma)
     end
   end
 
   # [Orient] Rule
-  def unify(t1, t2, sigma) when is_atom(t2) do
-    case is_logic_var?(t2) do
-      true -> unify(t2, t1, sigma)
-      false -> :unmatch
-    end
+  def unify(t1, {:var, _x} = t2, sigma) do
+    unify(t2, t1, sigma)
   end
 
   # [Tuple] Rule
@@ -128,12 +128,4 @@ defmodule LogicElixir do
   @spec components_of(tuple()) :: [term()]
   defp components_of({:ground, t}), do: Tuple.to_list(t)
   defp components_of(t) when is_tuple(t), do: Tuple.to_list(t)
-
-  @spec is_logic_var?(atom()) :: boolean()
-  defp is_logic_var?(t) do
-    case :erlang.atom_to_binary(t) do
-      <<"Elixir.", _::binary>> -> true
-      _ -> false
-    end
-  end
 end

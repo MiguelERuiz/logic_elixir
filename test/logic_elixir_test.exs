@@ -22,41 +22,42 @@ defmodule LogicElixirTest do
   end
 
   test "Verifies [Id] rule" do
-    assert unify(X, X, %{}) == %{}
-    assert unify(Y, Y, %{}) == %{}
-    assert unify(Z, Z, %{}) == %{}
+    assert unify({:var, "X"}, {:var, "X"}, %{}) == %{}
+    assert unify({:var, "Y"}, {:var, "Y"}, %{}) == %{}
+    assert unify({:var, "Z"}, {:var, "Z"}, %{}) == %{}
   end
 
   test "Verifies [Var1], [Var2], [Occurs-check] and [Orient] rules" do
-    assert unify(X, Y, %{}) == %{'Elixir.X': Y}
-    assert unify(Y, X, %{}) == %{'Elixir.Y': X}
-    assert unify(X, {:ground, 3}, %{}) == %{'Elixir.X': {:ground, 3}}
-    assert unify({:ground, 3}, X, %{}) == %{'Elixir.X': {:ground, 3}}
-    assert unify({X, X}, {{:ground, 5}, {:ground, 5}}, %{}) == %{'Elixir.X': {:ground, 5}}
-    assert unify(X, {X, {:ground, 3}}, %{}) == %{'Elixir.X': {X, {:ground, 3}}}
-    assert unify(X, [X, {:ground, 3}], %{}) == %{'Elixir.X': [X, {:ground, 3}]}
-    assert unify(Y, [X, Z], %{}) == %{'Elixir.Y': [X, Z]}
+    assert unify({:var, "X"}, {:var, "Y"}, %{}) == %{"X" => {:var, "Y"}}
+    assert unify({:var, "Y"}, {:var, "X"}, %{}) == %{"Y" => {:var, "X"}}
+    assert unify({:var, "X"}, {:ground, 3}, %{}) == %{"X" => {:ground, 3}}
+    assert unify({:ground, 3}, {:var, "X"}, %{}) == %{"X" => {:ground, 3}}
+    assert unify({{:var, "X"}, {:var, "X"}}, {{:ground, 5}, {:ground, 5}}, %{}) == %{"X" => {:ground, 5}}
+    assert unify({:var, "X"}, {{:var, "X"}, {:ground, 3}}, %{}) == :unmatch
+    assert unify({:var, "X"}, [{:var, "X"}, {:ground, 3}], %{}) == :unmatch
+    assert unify({:var, "Y"}, [{:var, "X"}, {:var, "Z"}], %{}) == %{"Y" => [{:var, "X"}, {:var, "Z"}]}
+    assert unify({:var, "X"}, [{:ground, 1}, {:ground, 2}], %{}) == %{"X" => {:ground, [1, 2]}}
   end
 
   test "Verifies [Tuple] rule" do
-    assert unify({X, Y}, {:ground, {1, 2}}, %{}) == %{'Elixir.X': 1, 'Elixir.Y': 2}
-    assert unify({X, Y}, {{:ground, [1, 2]}, {:ground, [3, 4]}}, %{}) == %{'Elixir.X': {:ground, [1, 2]}, 'Elixir.Y': {:ground, [3, 4]}}
-    assert unify({T, S}, {{:ground, 1}, [X, Y, Z]}, %{}) == %{'Elixir.T': {:ground, 1}, 'Elixir.S': [X, Y, Z]}
-    assert unify({X, Y}, {Y, {:ground, 5}}, %{}) == %{'Elixir.X': Y, 'Elixir.Y': {:ground, 5}}
+    assert unify({{:var, "X"}, {:var, "Y"}}, {:ground, {1, 2}}, %{}) == %{"X" => 1, "Y" => 2}
+    assert unify({{:var, "X"}, {:var, "Y"}}, {{:ground, [1, 2]}, {:ground, [3, 4]}}, %{}) == %{"X" => {:ground, [1, 2]}, "Y" => {:ground, [3, 4]}}
+    assert unify({{:var, "T"}, {:var, "S"}}, {{:ground, 1}, [{:var, "X"}, {:var, "Y"}, {:var, "Z"}]}, %{}) == %{"T" => {:ground, 1}, "S" => [{:var, "X"}, {:var, "Y"}, {:var, "Z"}]}
+    assert unify({{:var, "X"}, {:var, "Y"}}, {{:var, "Y"}, {:ground, 5}}, %{}) == %{"X" => {:var, "Y"}, "Y" => {:ground, 5}}
   end
 
   test "Verifies [List] rule" do
     assert unify([], [], %{}) == %{}
     assert unify([{:ground, 1}, {:ground, 2}, {:ground, 3}], [{:ground, 1}, {:ground, 2}, {:ground, 3}], %{}) == %{}
-    assert unify([{:ground, 1}, {:ground, 2}, {:ground, 3}], [X, Y, Z], %{}) == %{'Elixir.X': {:ground, 1}, 'Elixir.Y': {:ground, 2}, 'Elixir.Z': {:ground, 3}}
-    assert unify([X, X], [{:ground, 5}, {:ground, 5}], %{}) == %{'Elixir.X': {:ground, 5}}
-    assert unify([X, Y], [{:ground, 5}, {X, {:ground, 3}}], %{}) == %{'Elixir.X': {:ground, 5}, 'Elixir.Y': {{:ground, 5}, {:ground, 3}}}
-    assert unify([X, Y, Z], [{:ground, 5}, {X, {:ground, 3}}, {:ground, :a}], %{}) == %{'Elixir.Y': {:ground, 5}, 'Elixir.X': {{:ground, 5}, {:ground, 3}}, 'Elixir.Z': {:ground, :a}}
+    assert unify([{:ground, 1}, {:ground, 2}, {:ground, 3}], [{:var, "X"}, {:var, "Y"}, {:var, "Z"}], %{}) == %{"X" => {:ground, 1}, "Y" => {:ground, 2}, "Z" => {:ground, 3}}
+    assert unify([{:var, "X"}, {:var, "X"}], [{:ground, 5}, {:ground, 5}], %{}) == %{"X" => {:ground, 5}}
+    assert unify([{:var, "Y"}, {:var, "X"}], [{{:var, "X"}, {:ground, 3}}, {:ground, 5}], %{}) == %{"Y" => {{:ground, 5}, {:ground, 3}}, "X" => {:ground, 5}}
+    assert unify([{:var, "Y"}, {:var, "X"}, {:var, "Z"}], [{{:var, "X"}, {:ground, 3}}, {:ground, 5}, {:ground, :a}], %{}) == %{"Y" => {{:ground, 5}, {:ground, 3}}, "X" => {:ground, 5}, "Z" => {:ground, :a}}
   end
 
   test "Verifies [Clash] rule" do
     assert unify(:a, 3, %{}) == :unmatch
     assert unify(:a, :a, %{}) == :unmatch
-    assert unify({X, Y}, {:ground, 3}, %{}) == :unmatch
+    assert unify({{:var, "X"}, {:var, "Y"}}, {:ground, 3}, %{}) == :unmatch
   end
 end
