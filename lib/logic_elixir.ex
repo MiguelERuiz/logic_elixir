@@ -26,6 +26,7 @@ defmodule LogicElixir do
   ##########
 
   defguardp is_tuple_term(t) when is_tuple(t) and (elem(t, 0) != :ground or is_tuple(elem(t, 1)))
+  defguardp belongs_to(sigma, t) when is_map_key(sigma, t)
 
   #############
   # Functions #
@@ -42,16 +43,17 @@ defmodule LogicElixir do
   def unify({:var, x}, {:var, x}, sigma), do: sigma
 
   # [Var1] Rule
-  def unify({:var, x}, t, sigma) when is_map_key(sigma, x) do
+  def unify({:var, x}, t, sigma) when belongs_to(sigma, x) do
     unify(sigma[x], t, sigma)
   end
 
   # [Var2] and [Occurs-check] Rules
-  def unify({:var, x}, t, sigma) when not is_map_key(sigma, x) do
-    # Logger.info("[Var] t1: #{inspect(t1)} t2: #{inspect(t2)} sigma: #{inspect(sigma)}")
+  def unify({:var, x}, t, sigma) when not belongs_to(sigma, x) do
     if x in vars(sigma, t) do
+      # [Occurs-check]
       :unmatch
     else
+      # [Var2]
       unify_variable(x, t, sigma)
     end
   end
@@ -103,27 +105,33 @@ defmodule LogicElixir do
   end
 
   # TODO Not only unify/3 but make the possible substitutions
-  @spec unify_variable(t(), t(), sigma()) :: sigma()
-  defp unify_variable(t1, {:ground, t2}, sigma) do
-    Logger.info("[Unify Exterm] t1: #{inspect(t1)} t2: #{inspect({:ground, t2})} sigma: #{inspect(sigma)}")
-    case Map.fetch(sigma, t1) do
+  @spec unify_variable(String.t(), t(), sigma()) :: sigma()
+  defp unify_variable(x, {:ground, t2}, sigma) do
+    Logger.info("[Unify Exterm] t1: #{inspect(x)} t2: #{inspect({:ground, t2})} sigma: #{inspect(sigma)}")
+    case Map.fetch(sigma, x) do
       {:ok, subt} ->
         Logger.info("[Unify Exterm] Map.fetch(sigma, t1) -> #{inspect(subt)}")
         sigma
-      :error -> Map.put(sigma, t1, {:ground, t2})
+      :error -> Map.put(sigma, x, {:ground, t2})
     end
   end
 
   defp unify_variable(t1, t2, sigma) do
     Logger.info("[Unify Variable] t1: #{inspect(t1)} t2: #{inspect(t2)} sigma: #{inspect(sigma)}")
-    Logger.info("vars of t2: #{inspect(vars(sigma, t2))}")
     case Map.fetch(sigma, t1) do
       {:ok, subt} ->
         Logger.info("[Unify Variable] Map.fetch(sigma, t1) -> #{inspect(subt)}")
-        sigma
+        new_subt = apply_subtitution(sigma, subt)
+        Map.merge(sigma, %{t1 => new_subt})
       :error -> Map.put(sigma, t1, t2)
     end
   end
+
+  # TODO define both tuple and lists cases
+  @spec apply_subtitution(sigma(), t()) :: t()
+  def apply_subtitution(sigma, {:var, x}) when belongs_to(sigma, x), do: sigma[x]
+  def apply_subtitution(_sigma, {:var, x}), do: {:var, x}
+  def apply_subtitution(_sigma, {:ground, t}), do: {:ground, t}
 
   @spec components_of(tuple()) :: [term()]
   defp components_of({:ground, t}), do: Tuple.to_list(t)
