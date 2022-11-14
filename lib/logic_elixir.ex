@@ -54,6 +54,7 @@ defmodule LogicElixir do
       :unmatch
     else
       # [Var2]
+      Logger.info("[Var2] case")
       unify_variable(x, t, sigma)
     end
   end
@@ -71,9 +72,15 @@ defmodule LogicElixir do
   end
 
   # [List] Rule
-  def unify([], [], sigma), do: sigma
+  def unify([], [], sigma) do
+    Logger.info("[List] empty lists")
+    sigma
+  end
 
   def unify([h1 | t1], [h2 | t2], sigma) do
+    Logger.info("[List] non empty lists")
+    Logger.info("h1: #{inspect(h1)}  t1: #{inspect(t1)}")
+    Logger.info("h2: #{inspect(h2)}  t2: #{inspect(t2)}")
     case unify(h1, h2, sigma) do
       :unmatch -> :unmatch
       sigma1 -> unify(t1, t2, sigma1)
@@ -91,11 +98,11 @@ defmodule LogicElixir do
   def vars(_sigma, {:ground, _}), do: MapSet.new()
   def vars(sigma, t) when is_tuple(t) do
     c = components_of(t)
-    Logger.info("[vars] c: #{inspect(c)}")
+    # Logger.info("[vars] c: #{inspect(c)}")
     vars(sigma, c)
   end
   def vars(sigma, t) when is_list(t) do
-    List.foldl(t, MapSet.new(), fn tx, acc -> MapSet.union(vars(sigma, tx), acc) end)
+    List.foldr(t, MapSet.new(), fn tx, acc -> MapSet.union(vars(sigma, tx), acc) end)
   end
   def vars(sigma, t) do
     case Map.fetch(sigma, t) do
@@ -104,34 +111,43 @@ defmodule LogicElixir do
     end
   end
 
-  # TODO Not only unify/3 but make the possible substitutions
   @spec unify_variable(String.t(), t(), sigma()) :: sigma()
   defp unify_variable(x, {:ground, t2}, sigma) do
     Logger.info("[Unify Exterm] t1: #{inspect(x)} t2: #{inspect({:ground, t2})} sigma: #{inspect(sigma)}")
     case Map.fetch(sigma, x) do
-      {:ok, subt} ->
-        Logger.info("[Unify Exterm] Map.fetch(sigma, t1) -> #{inspect(subt)}")
+      {:ok, _subt} ->
+        # Logger.info("[Unify Exterm] Map.fetch(sigma, t1) -> #{inspect(subt)}")
         sigma
-      :error -> Map.put(sigma, x, {:ground, t2})
+      :error -> apply_subtitutions(Map.put(sigma, x, {:ground, t2}))
     end
   end
 
-  defp unify_variable(t1, t2, sigma) do
-    Logger.info("[Unify Variable] t1: #{inspect(t1)} t2: #{inspect(t2)} sigma: #{inspect(sigma)}")
-    case Map.fetch(sigma, t1) do
-      {:ok, subt} ->
-        Logger.info("[Unify Variable] Map.fetch(sigma, t1) -> #{inspect(subt)}")
-        new_subt = apply_subtitution(sigma, subt)
-        Map.merge(sigma, %{t1 => new_subt})
-      :error -> Map.put(sigma, t1, t2)
+  defp unify_variable(x, t, sigma) do
+    Logger.info("[Unify Variable] x: #{inspect(x)} t: #{inspect(t)} sigma: #{inspect(sigma)}")
+    case Map.fetch(sigma, x) do
+      {:ok, _subt} ->
+        sigma
+      :error ->
+        apply_subtitutions(Map.put(sigma, x, t))
     end
   end
 
-  # TODO define both tuple and lists cases
+  @spec apply_subtitutions(sigma()) :: sigma()
+  def apply_subtitutions(sigma), do: :maps.from_list(Enum.map(sigma, fn {k, v} -> {k, apply_subtitution(sigma, v)} end))
+
   @spec apply_subtitution(sigma(), t()) :: t()
   def apply_subtitution(sigma, {:var, x}) when belongs_to(sigma, x), do: sigma[x]
   def apply_subtitution(_sigma, {:var, x}), do: {:var, x}
   def apply_subtitution(_sigma, {:ground, t}), do: {:ground, t}
+  def apply_subtitution(sigma, t) when is_tuple_term(t) do
+    c = components_of(t)
+    c1 = apply_subtitution(sigma, c)
+    List.to_tuple(c1)
+  end
+  def apply_subtitution(sigma, t) when is_list(t) do
+    # Enum.map(t, fn tx -> apply_subtitution(sigma, tx) end)
+    List.foldr(t, [], fn tx, acc -> [apply_subtitution(sigma, tx)|acc] end)
+  end
 
   @spec components_of(tuple()) :: [term()]
   defp components_of({:ground, t}), do: Tuple.to_list(t)

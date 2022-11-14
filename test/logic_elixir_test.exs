@@ -40,10 +40,10 @@ defmodule LogicElixirTest do
   end
 
   test "Verifies [Tuple] rule" do
-    assert unify({{:var, "X"}, {:var, "Y"}}, {:ground, {1, 2}}, %{}) == %{"X" => 1, "Y" => 2}
+    assert unify({{:var, "X"}, {:var, "Y"}}, {{:ground, {1, 2}}, {:ground, {3, 4}}}, %{}) == %{"X" => {:ground, {1, 2}}, "Y" => {:ground, {3, 4}}}
     assert unify({{:var, "X"}, {:var, "Y"}}, {{:ground, [1, 2]}, {:ground, [3, 4]}}, %{}) == %{"X" => {:ground, [1, 2]}, "Y" => {:ground, [3, 4]}}
     assert unify({{:var, "T"}, {:var, "S"}}, {{:ground, 1}, [{:var, "X"}, {:var, "Y"}, {:var, "Z"}]}, %{}) == %{"T" => {:ground, 1}, "S" => [{:var, "X"}, {:var, "Y"}, {:var, "Z"}]}
-    assert unify({{:var, "X"}, {:var, "Y"}}, {{:var, "Y"}, {:ground, 5}}, %{}) == %{"X" => {:var, "Y"}, "Y" => {:ground, 5}}
+    assert unify({{:var, "X"}, {:var, "Y"}}, {{:var, "Y"}, {:ground, 5}}, %{}) == %{"X" => {:ground, 5}, "Y" => {:ground, 5}}
   end
 
   test "Verifies [List] rule" do
