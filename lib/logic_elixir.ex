@@ -54,7 +54,6 @@ defmodule LogicElixir do
       :unmatch
     else
       # [Var2]
-      Logger.info("[Var2] case")
       unify_variable(x, t, sigma)
     end
   end
@@ -72,15 +71,9 @@ defmodule LogicElixir do
   end
 
   # [List] Rule
-  def unify([], [], sigma) do
-    Logger.info("[List] empty lists")
-    sigma
-  end
+  def unify([], [], sigma), do: sigma
 
   def unify([h1 | t1], [h2 | t2], sigma) do
-    Logger.info("[List] non empty lists")
-    Logger.info("h1: #{inspect(h1)}  t1: #{inspect(t1)}")
-    Logger.info("h2: #{inspect(h2)}  t2: #{inspect(t2)}")
     case unify(h1, h2, sigma) do
       :unmatch -> :unmatch
       sigma1 -> unify(t1, t2, sigma1)
@@ -95,35 +88,31 @@ defmodule LogicElixir do
   #####################
 
   @spec vars(sigma(), t()) :: vars_set()
-  def vars(_sigma, {:ground, _}), do: MapSet.new()
-  def vars(sigma, t) when is_tuple(t) do
+  defp vars(_sigma, {:ground, _}), do: MapSet.new()
+  defp vars(sigma, t) when is_tuple(t) do
     c = components_of(t)
-    # Logger.info("[vars] c: #{inspect(c)}")
     vars(sigma, c)
   end
-  def vars(sigma, t) when is_list(t) do
+  defp vars(sigma, t) when is_list(t) do
     List.foldr(t, MapSet.new(), fn tx, acc -> MapSet.union(vars(sigma, tx), acc) end)
   end
-  def vars(sigma, t) do
+  defp vars(sigma, t) do
     case Map.fetch(sigma, t) do
       {:ok, subt} -> vars(sigma, subt)
       :error -> MapSet.new([t])
     end
   end
 
-  @spec unify_variable(String.t(), t(), sigma()) :: sigma()
+  @spec unify_variable(String.t(), t(), %{String.t() => t()}) :: %{String.t() => t()}
   defp unify_variable(x, {:ground, t2}, sigma) do
-    Logger.info("[Unify Exterm] t1: #{inspect(x)} t2: #{inspect({:ground, t2})} sigma: #{inspect(sigma)}")
     case Map.fetch(sigma, x) do
       {:ok, _subt} ->
-        # Logger.info("[Unify Exterm] Map.fetch(sigma, t1) -> #{inspect(subt)}")
         sigma
       :error -> apply_subtitutions(Map.put(sigma, x, {:ground, t2}))
     end
   end
 
   defp unify_variable(x, t, sigma) do
-    Logger.info("[Unify Variable] x: #{inspect(x)} t: #{inspect(t)} sigma: #{inspect(sigma)}")
     case Map.fetch(sigma, x) do
       {:ok, _subt} ->
         sigma
@@ -132,24 +121,38 @@ defmodule LogicElixir do
     end
   end
 
-  @spec apply_subtitutions(sigma()) :: sigma()
-  def apply_subtitutions(sigma), do: :maps.from_list(Enum.map(sigma, fn {k, v} -> {k, apply_subtitution(sigma, v)} end))
+  @spec apply_subtitutions(%{String.t() => t()}) :: %{String.t() => t()}
+  defp apply_subtitutions(sigma), do: :maps.from_list(Enum.map(sigma, fn {k, v} -> {k, apply_subtitution(sigma, v)} end))
 
-  @spec apply_subtitution(sigma(), t()) :: t()
-  def apply_subtitution(sigma, {:var, x}) when belongs_to(sigma, x), do: sigma[x]
-  def apply_subtitution(_sigma, {:var, x}), do: {:var, x}
-  def apply_subtitution(_sigma, {:ground, t}), do: {:ground, t}
-  def apply_subtitution(sigma, t) when is_tuple_term(t) do
+  @spec apply_subtitution(%{String.t() => t()}, t()) :: t()
+  defp apply_subtitution(sigma, {:var, x}) when belongs_to(sigma, x), do: sigma[x]
+  defp apply_subtitution(_sigma, {:var, x}), do: {:var, x}
+  defp apply_subtitution(_sigma, {:ground, t}), do: {:ground, t}
+  defp apply_subtitution(sigma, t) when is_tuple_term(t) do
     c = components_of(t)
     c1 = apply_subtitution(sigma, c)
-    List.to_tuple(c1)
+    case c1 do
+      {:ground, l} -> {:ground, List.to_tuple(l)}
+      _ -> List.to_tuple(c1)
+    end
   end
-  def apply_subtitution(sigma, t) when is_list(t) do
-    # Enum.map(t, fn tx -> apply_subtitution(sigma, tx) end)
-    List.foldr(t, [], fn tx, acc -> [apply_subtitution(sigma, tx)|acc] end)
+  defp apply_subtitution(sigma, t) when is_list(t) do
+    all_grounds(List.foldr(t, [], fn tx, acc -> [apply_subtitution(sigma, tx)|acc] end))
   end
 
   @spec components_of(tuple()) :: [term()]
   defp components_of({:ground, t}), do: Tuple.to_list(t)
   defp components_of(t) when is_tuple(t), do: Tuple.to_list(t)
+
+  @spec all_grounds([t()]) :: {:ground, [term()]} | [t()]
+  defp all_grounds(t)  do
+    case Enum.all?(t, fn tx -> is_ground_term?(tx) end) do
+      true -> {:ground, Enum.map(t, fn {:ground, tx} -> tx end)}
+      false -> t
+    end
+  end
+
+  @spec is_ground_term?(t()) :: boolean()
+  defp is_ground_term?({:ground, _t}), do: true
+  defp is_ground_term?(_), do: false
 end
