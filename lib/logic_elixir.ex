@@ -89,55 +89,49 @@ defmodule LogicElixir do
 
   @spec vars(sigma(), t()) :: vars_set()
   defp vars(_sigma, {:ground, _}), do: MapSet.new()
+
+  defp vars(sigma, {:var, x}) do
+    case Map.fetch(sigma, x) do
+      {:ok, subt} -> vars(sigma, subt)
+      :error -> MapSet.new([x])
+    end
+  end
+
   defp vars(sigma, t) when is_tuple(t) do
     c = components_of(t)
     vars(sigma, c)
   end
+
   defp vars(sigma, t) when is_list(t) do
-    List.foldr(t, MapSet.new(), fn tx, acc -> MapSet.union(vars(sigma, tx), acc) end)
-  end
-  defp vars(sigma, t) do
-    case Map.fetch(sigma, t) do
-      {:ok, subt} -> vars(sigma, subt)
-      :error -> MapSet.new([t])
-    end
+    Enum.reduce(t, MapSet.new(), fn tx, acc -> MapSet.union(vars(sigma, tx), acc) end)
   end
 
   @spec unify_variable(String.t(), t(), %{String.t() => t()}) :: %{String.t() => t()}
-  defp unify_variable(x, {:ground, t2}, sigma) do
-    case Map.fetch(sigma, x) do
-      {:ok, _subt} ->
-        sigma
-      :error -> apply_subtitutions(Map.put(sigma, x, {:ground, t2}))
-    end
-  end
-
   defp unify_variable(x, t, sigma) do
-    case Map.fetch(sigma, x) do
-      {:ok, _subt} ->
-        sigma
-      :error ->
-        apply_subtitutions(Map.put(sigma, x, t))
-    end
+    apply_subtitutions(Map.put(sigma, x, t))
   end
 
   @spec apply_subtitutions(%{String.t() => t()}) :: %{String.t() => t()}
-  defp apply_subtitutions(sigma), do: :maps.from_list(Enum.map(sigma, fn {k, v} -> {k, apply_subtitution(sigma, v)} end))
+  defp apply_subtitutions(sigma),
+    do: :maps.map(fn _, v -> apply_subtitution(sigma, v) end, sigma)
 
   @spec apply_subtitution(%{String.t() => t()}, t()) :: t()
   defp apply_subtitution(sigma, {:var, x}) when belongs_to(sigma, x), do: sigma[x]
   defp apply_subtitution(_sigma, {:var, x}), do: {:var, x}
   defp apply_subtitution(_sigma, {:ground, t}), do: {:ground, t}
+
   defp apply_subtitution(sigma, t) when is_tuple_term(t) do
     c = components_of(t)
     c1 = apply_subtitution(sigma, c)
+
     case c1 do
       {:ground, l} -> {:ground, List.to_tuple(l)}
       _ -> List.to_tuple(c1)
     end
   end
+
   defp apply_subtitution(sigma, t) when is_list(t) do
-    all_grounds(List.foldr(t, [], fn tx, acc -> [apply_subtitution(sigma, tx)|acc] end))
+    all_grounds(Enum.map(t, &apply_subtitution(sigma, &1)))
   end
 
   @spec components_of(tuple()) :: [term()]
@@ -145,7 +139,7 @@ defmodule LogicElixir do
   defp components_of(t) when is_tuple(t), do: Tuple.to_list(t)
 
   @spec all_grounds([t()]) :: {:ground, [term()]} | [t()]
-  defp all_grounds(t)  do
+  defp all_grounds(t) do
     case Enum.all?(t, fn tx -> is_ground_term?(tx) end) do
       true -> {:ground, Enum.map(t, fn {:ground, tx} -> tx end)}
       false -> t
