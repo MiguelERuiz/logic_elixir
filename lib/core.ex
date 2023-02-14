@@ -15,11 +15,17 @@ defmodule Core do
 
   #? Should must be add types for AST nodes??
 
+  ##########
+  # Guards #
+  ##########
+
+  defguard is_literal(t) when is_binary(t) or is_integer(t) or is_list(t) or is_tuple(t)
+
   #############
   # Functions #
   #############
 
-  def tr_def({:defcore, _metadata, [predicate_name_node, _do_block_node]}) do
+  def tr_def({:defcore, _metadata, [predicate_name_node, [do: {:__block__, [], goals}]]}) do
     {predicate_name, [], predicate_args} = predicate_name_node
     logic_vars = Enum.map(predicate_args, fn {:__aliases__, _metadata, [logic_var]} -> logic_var end)
     t_list = Enum.map(predicate_args, fn _ -> VarBuilder.gen_var end)
@@ -33,8 +39,7 @@ defmodule Core do
         # TODO the number of y-variables must be the difference between vars(G) and arguments
         fn th1 ->
           th2 = Map.merge(th1, Map.new(unquote(Enum.zip(x_list, t_list))))
-          # TODO extract list of goals
-          (unquote(tr_goals(delta, []))).(th2)
+          (unquote(tr_goals(delta, goals))).(th2)
             # TODO complete with y_list when got it
             |> Stream.map(&Map.drop(&1, List.flatten([x_list])))
         end
@@ -44,21 +49,48 @@ defmodule Core do
 
   def tr_goals(_delta, []), do: fn th -> [th] end
   def tr_goals(delta, [goal|goals]) do
+    Logger.info("[tr_goal] outside lambda function")
     fn th1 ->
+      Logger.info("[tr_goal] inside lambda function")
       (tr_goal(delta, goal)).(th1)
         |> Stream.flat_map(fn th2 -> (tr_goals(delta, goals)).(th2) end)
     end
   end
 
-  def tr_goal(delta, {:=, [], t1, t2}) do
+  def tr_goal(delta, {predicate_name, [], args}) do
+    fn th ->
+      tr_term_args = Enum.map(args, fn arg -> tr_term(delta, th, arg) end)
+      quote do
+        unquote({predicate_name, [], [tr_term_args]}).(th)
+      end
+    end
+  end
+
+  def tr_goal(delta, {:=, [], [t1, t2]} = goal) do
+    Logger.info("tr_goal")
+    Logger.info(goal |> Macro.to_string)
     fn th ->
       unify_gen(th, tr_term(delta, th, t1), tr_term(delta, th, t2))
     end
   end
 
+  # TODO complete
+  def tr_goal(_delta, {:choice, [], [_do_block]}) do
+    fn th ->
+      [] |> Stream.flat_map(fn f -> f.(th) end)
+    end
+  end
+
+  def tr_goal(_delta, goal) do
+    Logger.error("ERROR tr_goal")
+    Logger.error(goal |> Macro.to_string)
+  end
+
   # TODO improve
-  def tr_term(_delta, _x, lit) when is_integer(lit), do: {:ground, lit}
-  def tr_term(delta, _x, logic_var), do: {:var, delta[logic_var]}
+  def tr_term(_delta, _x, lit) when is_literal(lit), do: {:ground, lit}
+  def tr_term(delta, _x, logic_var) do
+    {:var, delta[logic_var]}
+  end
 
   def foo do
     quote do
