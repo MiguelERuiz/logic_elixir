@@ -6,6 +6,8 @@ defmodule Core do
   # import Core.Choice
   require Logger
 
+  # TODO investigate the way of making VarBuilder.start_link automatically
+
   #########
   # Types #
   #########
@@ -25,6 +27,7 @@ defmodule Core do
   # Functions #
   #############
 
+  # TODO change do_block pattern matching
   def tr_def({:defcore, _metadata, [predicate_name_node, [do: {:__block__, [], goals}]]}) do
     {predicate_name, [], predicate_args} = predicate_name_node
     logic_vars = Enum.map(predicate_args, fn {:__aliases__, _metadata, [logic_var]} -> logic_var end)
@@ -35,7 +38,7 @@ defmodule Core do
     quote do
       def unquote({predicate_name, [], t_list}) do
         # TODO the number of x-variables must be the number of arguments
-        unquote({:=, [], [{:x, [], Elixir}, VarBuilder.gen_var]})
+        # unquote({:=, [], [{:x, [], Elixir}, VarBuilder.gen_var]})
         # TODO the number of y-variables must be the difference between vars(G) and arguments
         fn th1 ->
           th2 = Map.merge(th1, Map.new(unquote(Enum.zip(x_list, t_list))))
@@ -47,13 +50,18 @@ defmodule Core do
     end
   end
 
-  def tr_goals(_delta, []), do: fn th -> [th] end
+  def tr_goals(_delta, []) do
+    quote do
+      fn th -> [th] end
+    end
+  end
+
   def tr_goals(delta, [goal|goals]) do
-    Logger.info("[tr_goal] outside lambda function")
-    fn th1 ->
-      Logger.info("[tr_goal] inside lambda function")
-      (tr_goal(delta, goal)).(th1)
-        |> Stream.flat_map(fn th2 -> (tr_goals(delta, goals)).(th2) end)
+    quote do
+      fn th1 ->
+        (unquote(tr_goal(delta, goal))).(th1)
+          |> Stream.flat_map(fn th2 -> (unquote(tr_goals(delta, goals))).(th2) end)
+      end
     end
   end
 
@@ -66,11 +74,11 @@ defmodule Core do
     end
   end
 
-  def tr_goal(delta, {:=, [], [t1, t2]} = goal) do
-    Logger.info("tr_goal")
-    Logger.info(goal |> Macro.to_string)
-    fn th ->
-      unify_gen(th, tr_term(delta, th, t1), tr_term(delta, th, t2))
+  def tr_goal(delta, {:=, [], [t1, t2]}) do
+    quote do
+      fn th ->
+        unify_gen(th, tr_term(delta, th, t1), tr_term(delta, th, t2))
+      end
     end
   end
 
@@ -81,31 +89,25 @@ defmodule Core do
     end
   end
 
-  def tr_goal(_delta, goal) do
-    Logger.error("ERROR tr_goal")
-    Logger.error(goal |> Macro.to_string)
-  end
-
   # TODO improve
   def tr_term(_delta, _x, lit) when is_literal(lit), do: {:ground, lit}
   def tr_term(delta, _x, logic_var) do
     {:var, delta[logic_var]}
   end
 
-  def foo do
+  def p1 do
     quote do
-      defcore pred(X, Y) do
+      defcore pred1(X) do
         X = 5
-        Y = 2
       end
     end
   end
 
-  def bar do
+  def p2 do
     quote do
-      def pred(x, y) do
-        a = 1
-        b = 2
+      defcore pred2(X, Y) do
+        X = 5
+        Y = 6
       end
     end
   end
