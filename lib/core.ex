@@ -28,23 +28,28 @@ defmodule Core do
   #############
 
   # TODO change do_block pattern matching
-  def tr_def({:defcore, _metadata, [predicate_name_node, [do: {:__block__, [], goals}]]}) do
+  def tr_def({:defcore, _metadata, [predicate_name_node, [do: do_block]]}) do
     {predicate_name, [], predicate_args} = predicate_name_node
+    goals = case do_block do
+      {:__block__, [], do_stmts} -> do_stmts
+      _ -> [do_block]
+    end
     logic_vars = Enum.map(predicate_args, fn {:__aliases__, _metadata, [logic_var]} -> logic_var end)
-    t_list = Enum.map(predicate_args, fn _ -> VarBuilder.gen_var end)
-    x_list = Enum.map(predicate_args, fn _ -> VarBuilder.gen_var end)
+    t_list = Enum.map(1..length(predicate_args), fn t -> String.to_atom("t#{t}") |> Macro.unique_var(__MODULE__) end)
+    x_list = Enum.map(1..length(predicate_args), fn x -> String.to_atom("x#{x}") |> Macro.unique_var(__MODULE__) end)
+    x_list_values = Enum.map(1..length(predicate_args), fn _ -> VarBuilder.gen_var end)
+    x_list_map = Enum.zip(x_list, x_list_values) |> Enum.into(%{})
     delta = Enum.zip(logic_vars, x_list) |> Enum.into(%{})
 
     quote do
       def unquote({predicate_name, [], t_list}) do
-        # TODO the number of x-variables must be the number of arguments
-        # unquote({:=, [], [{:x, [], Elixir}, VarBuilder.gen_var]})
+        unquote({:__block__, [], x_list_map |> Enum.map(fn {k, v} -> {:=, [], [k, v]} end)})
         # TODO the number of y-variables must be the difference between vars(G) and arguments
         fn th1 ->
           th2 = Map.merge(th1, Map.new(unquote(Enum.zip(x_list, t_list))))
           (unquote(tr_goals(delta, goals))).(th2)
             # TODO complete with y_list when got it
-            |> Stream.map(&Map.drop(&1, List.flatten([x_list])))
+            |> Stream.map(&Map.drop(&1, unquote(List.flatten([x_list]))))
         end
       end
     end
@@ -108,6 +113,15 @@ defmodule Core do
       defcore pred2(X, Y) do
         X = 5
         Y = 6
+      end
+    end
+  end
+
+  def p3 do
+    quote do
+      defcore pred3(X, Y) do
+        X = Z
+        Y = Z
       end
     end
   end
