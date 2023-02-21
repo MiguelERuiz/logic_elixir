@@ -27,29 +27,42 @@ defmodule Core do
   # Functions #
   #############
 
-  # TODO change do_block pattern matching
   def tr_def({:defcore, _metadata, [predicate_name_node, [do: do_block]]}) do
     {predicate_name, [], predicate_args} = predicate_name_node
+
     goals = case do_block do
       {:__block__, [], do_stmts} -> do_stmts
       _ -> [do_block]
     end
+
     logic_vars = Enum.map(predicate_args, fn {:__aliases__, _metadata, [logic_var]} -> logic_var end)
-    t_list = Enum.map(1..length(predicate_args), fn t -> String.to_atom("t#{t}") |> Macro.unique_var(__MODULE__) end)
-    x_list = Enum.map(1..length(predicate_args), fn x -> String.to_atom("x#{x}") |> Macro.unique_var(__MODULE__) end)
-    x_list_values = Enum.map(1..length(predicate_args), fn _ -> VarBuilder.gen_var end)
+
+    {t_list, x_list, x_list_values} = case predicate_args do
+      [] -> {[], [], []}
+      _ ->
+        {
+          Enum.map(1..length(predicate_args), fn t -> String.to_atom("t#{t}") |> Macro.unique_var(__MODULE__) end),
+          Enum.map(1..length(predicate_args), fn x -> String.to_atom("x#{x}") |> Macro.unique_var(__MODULE__) end),
+          Enum.map(1..length(predicate_args), fn _ -> VarBuilder.gen_var end)
+        }
+    end
     x_list_map = Enum.zip(x_list, x_list_values) |> Enum.into(%{})
+
+    vars_goals = goals |> vars() |> Enum.filter(fn arg -> not :lists.member(arg, predicate_args) end)
+    y_list = 1..length(vars_goals) |> Enum.map(fn y -> String.to_atom("y#{y}") |> Macro.unique_var(__MODULE__) end)
+    y_list_values = 1..length(predicate_args) |> Enum.map(fn _ -> VarBuilder.gen_var end)
+    y_list_map = Enum.zip(y_list, y_list_values) |> Enum.into(%{})
+
     delta = Enum.zip(logic_vars, x_list) |> Enum.into(%{})
 
     quote do
       def unquote({predicate_name, [], t_list}) do
         unquote({:__block__, [], x_list_map |> Enum.map(fn {k, v} -> {:=, [], [k, v]} end)})
-        # TODO the number of y-variables must be the difference between vars(G) and arguments
+        unquote({:__block__, [], y_list_map |> Enum.map(fn {k, v} -> {:=, [], [k, v]} end)})
         fn th1 ->
           th2 = Map.merge(th1, Map.new(unquote(Enum.zip(x_list, t_list))))
           (unquote(tr_goals(delta, goals))).(th2)
-            # TODO complete with y_list when got it
-            |> Stream.map(&Map.drop(&1, unquote(List.flatten([x_list]))))
+            |> Stream.map(&Map.drop(&1, unquote(List.flatten([x_list, y_list]))))
         end
       end
     end
@@ -126,6 +139,22 @@ defmodule Core do
     end
   end
 
+  def p4 do
+    quote do
+      defcore pred4(X) do
+        Z = X
+      end
+    end
+  end
+
+  def p5 do
+    quote do
+      defcore pred5() do
+        Z = 1
+      end
+    end
+  end
+
   #####################
   # Private Functions #
   #####################
@@ -136,4 +165,15 @@ defmodule Core do
       theta2 -> theta2
     end
   end
+
+  defp vars(goals) do
+    goals
+    |> Enum.map(fn {_operator, _metadata, arguments} -> arguments end)
+    |> :lists.flatten()
+    |> Enum.filter(fn arg -> is_logic_variable?(arg) end)
+    |> Enum.uniq()
+  end
+
+  defp is_logic_variable?({:__aliases__, _metadata, [logic_variable]}) when is_atom(logic_variable), do: true
+  defp is_logic_variable?(_), do: false
 end
