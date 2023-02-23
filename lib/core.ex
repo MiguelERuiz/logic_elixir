@@ -3,7 +3,6 @@ defmodule Core do
   Documentation for Core module.
   """
   import Unification, only: [unify: 3]
-  # import Core.Choice
   require Logger
 
   # TODO investigate the way of making VarBuilder.start_link automatically
@@ -49,8 +48,15 @@ defmodule Core do
     x_list_map = Enum.zip(x_list, x_list_values) |> Enum.into(%{})
 
     vars_goals = goals |> vars() |> Enum.filter(fn arg -> not :lists.member(arg, predicate_args) end)
-    y_list = 1..length(vars_goals) |> Enum.map(fn y -> String.to_atom("y#{y}") |> Macro.unique_var(__MODULE__) end)
-    y_list_values = 1..length(predicate_args) |> Enum.map(fn _ -> VarBuilder.gen_var end)
+
+    {y_list, y_list_values} = case vars_goals do
+      [] -> {[], []}
+      _ ->
+        {
+          1..length(vars_goals) |> Enum.map(fn y -> String.to_atom("y#{y}") |> Macro.unique_var(__MODULE__) end),
+          1..length(vars_goals) |> Enum.map(fn _ -> VarBuilder.gen_var end)
+        }
+    end
     y_list_map = Enum.zip(y_list, y_list_values) |> Enum.into(%{})
 
     delta = Enum.zip(logic_vars, x_list) |> Enum.into(%{})
@@ -93,9 +99,12 @@ defmodule Core do
   end
 
   def tr_goal(delta, {:=, [], [t1, t2]}) do
+    th = Macro.unique_var(:th, __MODULE__)
+    term1 = tr_term(delta, th, t1)
+    term2 = tr_term(delta, th, t2)
     quote do
-      fn th ->
-        unify_gen(th, tr_term(delta, th, t1), tr_term(delta, th, t2))
+      fn unquote(th) ->
+        unify_gen(th, unquote(term1), unquote(term2))
       end
     end
   end
@@ -108,8 +117,8 @@ defmodule Core do
   end
 
   # TODO improve
-  def tr_term(_delta, _x, lit) when is_literal(lit), do: {:ground, lit}
-  def tr_term(delta, _x, logic_var) do
+  def tr_term(_delta, _x, lit) when is_integer(lit), do: {:ground, lit}
+  def tr_term(delta, _x, {:__aliases__, _metadata, [logic_var]}) do
     {:var, delta[logic_var]}
   end
 
