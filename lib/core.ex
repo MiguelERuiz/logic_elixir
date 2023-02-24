@@ -24,6 +24,11 @@ defmodule Core do
   # Functions #
   #############
 
+  # TODO convert tr_def/1 into tr_def/2
+  # Example
+  # defmacro defcore(pred_name, [do: do_block]) do
+  #   tr_def(pred_name, do_block)
+  # end
   def tr_def({:defcore, _metadata, [predicate_name_node, [do: do_block]]}) do
     {predicate_name, [], predicate_args} = predicate_name_node
 
@@ -44,7 +49,7 @@ defmodule Core do
         }
     end
     x_list_map = Enum.zip(x_list, x_list_values) |> Enum.into(%{})
-
+    # x_map = Enum.zip(logic_vars, x_list) |> Enum.into(%{})
     vars_goals = goals |> vars() |> Enum.filter(fn arg -> not :lists.member(arg, predicate_args) end)
 
     {y_list, y_list_values} = case vars_goals do
@@ -56,7 +61,8 @@ defmodule Core do
         }
     end
     y_list_map = Enum.zip(y_list, y_list_values) |> Enum.into(%{})
-
+    # y_map = Enum.zip(vars_goals, y_list) |> Enum.into(%{})
+    #! FIX delta since it must receive also y_list
     delta = Enum.zip(logic_vars, x_list) |> Enum.into(%{})
 
     quote do
@@ -234,10 +240,10 @@ defmodule Core do
   # Private Functions #
   #####################
 
-  defp unify_gen(theta, t1, t2) do
+  def unify_gen(theta, t1, t2) do
     case unify(t1, t2, theta) do
       :unmatch -> []
-      theta2 -> theta2
+      theta2 -> [theta2]
     end
   end
 
