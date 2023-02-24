@@ -20,8 +20,6 @@ defmodule Core do
   # Guards #
   ##########
 
-  defguard is_literal(t) when is_binary(t) or is_integer(t) or is_list(t) or is_tuple(t)
-
   #############
   # Functions #
   #############
@@ -89,15 +87,6 @@ defmodule Core do
     end
   end
 
-  def tr_goal(delta, {predicate_name, [], args}) do
-    fn th ->
-      tr_term_args = Enum.map(args, fn arg -> tr_term(delta, th, arg) end)
-      quote do
-        unquote({predicate_name, [], [tr_term_args]}).(th)
-      end
-    end
-  end
-
   def tr_goal(delta, {:=, [], [t1, t2]}) do
     th = Macro.unique_var(:th, __MODULE__)
     term1 = tr_term(delta, th, t1)
@@ -109,18 +98,42 @@ defmodule Core do
     end
   end
 
-  # TODO complete
-  def tr_goal(_delta, {:choice, [], [_do_block]}) do
-    fn th ->
-      [] |> Stream.flat_map(fn f -> f.(th) end)
+  def tr_goal(delta, {:choice, [], [choice_block]}) do
+    # Logger.info("CHOICE BLOCK: #{inspect(choice_block)}")
+    th = Macro.unique_var(:th, __MODULE__)
+    goals = choice_goals(delta, choice_block)
+    quote do
+      fn unquote(th) ->
+        unquote(goals) |> Stream.flat_map(fn f -> f.(th) end)
+      end
     end
   end
 
+  # TODO test it
+  def tr_goal(delta, {predicate_name, [], args}) do
+    fn th ->
+      tr_term_args = Enum.map(args, fn arg -> tr_term(delta, th, arg) end)
+      quote do
+        unquote({predicate_name, [], [tr_term_args]}).(th)
+      end
+    end
+  end
+
+
   # TODO improve
-  def tr_term(_delta, _x, lit) when is_integer(lit), do: {:ground, lit}
+  def tr_term(_delta, _x, lit) when is_integer(lit) or is_binary(lit) or is_boolean(lit), do: {:ground, lit}
   def tr_term(delta, _x, {:__aliases__, _metadata, [logic_var]}) do
     {:var, delta[logic_var]}
   end
+
+  #####################
+  ##### EXAMPLES ######
+  #####################
+
+  # Execution:
+  # iex -S mix
+  # VarBuilder.start_link
+  # Core.p9 |> Core.tr_def |> Macro.to_string |> IO.puts
 
   def p1 do
     quote do
@@ -164,6 +177,59 @@ defmodule Core do
     end
   end
 
+  def p6 do
+    quote do
+      defcore pred6(X) do
+        choice do
+          X = 1
+        else
+          X = 2
+        end
+      end
+    end
+  end
+
+  def p7 do
+    quote do
+      defcore pred7(X) do
+        choice do
+          X = 1
+        else
+          X = 2
+        else
+          X = 3
+        end
+      end
+    end
+  end
+
+  def p8 do
+    quote do
+      defcore pred8(X, Y) do
+        choice do
+          X = 1
+        else
+          X = 2
+        end
+        Y = 3
+      end
+    end
+  end
+
+  def p9 do
+    quote do
+      defcore pred9(X, Y) do
+        choice do
+          X = 1
+          Y = 3
+        else
+          X = 2
+          Y = 4
+        end
+      end
+    end
+  end
+
   #####################
   # Private Functions #
   #####################
@@ -181,6 +247,35 @@ defmodule Core do
     |> :lists.flatten()
     |> Enum.filter(fn arg -> is_logic_variable?(arg) end)
     |> Enum.uniq()
+  end
+
+  defp choice_goals(delta, [{:do, do_block}, {:else, else_block} | rest]) do
+    # Logger.info("DO BLOCK: #{inspect(do_block)}")
+    # Logger.info("ELSE BLOCK: #{inspect(else_block)}")
+    # Logger.info("REST BLOCK: #{inspect(rest)}")
+    do_block_list = case do_block do
+      {:__block__, [], do_list} -> do_list
+      _ -> [do_block]
+    end
+    else_block_list = case else_block do
+      {:__block__, [], else_list} -> else_list
+      _ -> [else_block]
+    end
+    rest_list = case rest do
+      [] -> []
+      _ ->
+        rest
+          |> Enum.map(
+              fn {:else, extra_else_block} ->
+                case extra_else_block do
+                  {:__block__, [], else_list} -> else_list
+                  _ -> [extra_else_block]
+                end
+              end)
+          |> :lists.flatten
+    end
+    [do_block_list, else_block_list, rest_list]
+      |> Enum.map(fn goals -> tr_goals(delta, goals) end)
   end
 
   defp is_logic_variable?({:__aliases__, _metadata, [logic_variable]}) when is_atom(logic_variable), do: true
