@@ -285,23 +285,26 @@ defmodule Core do
         _ -> [else_block]
       end
 
-    rest_list =
+    goals =
       case rest do
         [] ->
-          []
+          [do_block_list, else_block_list]
 
         _ ->
-          rest
-          |> Enum.map(fn {:else, extra_else_block} ->
-            case extra_else_block do
-              {:__block__, [], else_list} -> else_list
-              _ -> [extra_else_block]
-            end
-          end)
-          |> :lists.flatten()
+          rest_list =
+            rest
+            |> Enum.map(fn {:else, extra_else_block} ->
+              case extra_else_block do
+                {:__block__, [], else_list} -> else_list
+                _ -> [extra_else_block]
+              end
+            end)
+            |> :lists.flatten()
+
+          [do_block_list, else_block_list, rest_list]
       end
 
-    [do_block_list, else_block_list, rest_list]
+    goals
     |> Enum.map(fn goals -> tr_goals(delta, goals) end)
   end
 
