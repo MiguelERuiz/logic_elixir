@@ -39,36 +39,32 @@ defmodule Core do
 
     logic_vars = Enum.map(predicate_args, fn {:__aliases__, _metadata, [logic_var]} -> logic_var end)
 
-    {t_list, x_list, x_list_values} = case predicate_args do
-      [] -> {[], [], []}
-      _ ->
-        {
-          Enum.map(1..length(predicate_args), fn t -> String.to_atom("t#{t}") |> Macro.unique_var(__MODULE__) end),
-          Enum.map(1..length(predicate_args), fn x -> String.to_atom("x#{x}") |> Macro.unique_var(__MODULE__) end),
-          Enum.map(1..length(predicate_args), fn _ -> VarBuilder.gen_var end)
-        }
-    end
-    x_list_map = Enum.zip(x_list, x_list_values) |> Enum.into(%{})
-    # x_map = Enum.zip(logic_vars, x_list) |> Enum.into(%{})
-    vars_goals = goals |> vars() |> Enum.filter(fn arg -> not :lists.member(arg, predicate_args) end)
-
-    {y_list, y_list_values} = case vars_goals do
+    {t_list, x_list} = case predicate_args do
       [] -> {[], []}
       _ ->
         {
-          1..length(vars_goals) |> Enum.map(fn y -> String.to_atom("y#{y}") |> Macro.unique_var(__MODULE__) end),
-          1..length(vars_goals) |> Enum.map(fn _ -> VarBuilder.gen_var end)
+          Enum.map(1..length(predicate_args), fn t -> String.to_atom("t#{t}") |> Macro.unique_var(__MODULE__) end),
+          Enum.map(1..length(predicate_args), fn x -> String.to_atom("x#{x}") |> Macro.unique_var(__MODULE__) end)
         }
     end
-    y_list_map = Enum.zip(y_list, y_list_values) |> Enum.into(%{})
-    # y_map = Enum.zip(vars_goals, y_list) |> Enum.into(%{})
-    #! FIX delta since it must receive also y_list
-    delta = Enum.zip(logic_vars, x_list) |> Enum.into(%{})
+    vars_goals = goals |> vars() |> Enum.filter(fn var -> not :lists.member(var, logic_vars) end)
+
+    y_list = case vars_goals do
+      [] -> []
+      _ ->
+          1..length(vars_goals) |> Enum.map(fn y -> String.to_atom("y#{y}") |> Macro.unique_var(__MODULE__) end)
+    end
+
+    delta_keys = :lists.flatten([logic_vars, vars_goals])
+    delta_values = :lists.flatten([x_list, y_list])
+    delta = Enum.zip(delta_keys, delta_values) |> Enum.into(%{})
+
+    gen_var = "VarBuilder.gen_var" |> String.to_atom |> Macro.unique_var(__MODULE__)
 
     quote do
       def unquote({predicate_name, [], t_list}) do
-        unquote({:__block__, [], x_list_map |> Enum.map(fn {k, v} -> {:=, [], [k, v]} end)})
-        unquote({:__block__, [], y_list_map |> Enum.map(fn {k, v} -> {:=, [], [k, v]} end)})
+        unquote({:__block__, [], x_list |> Enum.map(fn x -> {:=, [], [x, gen_var]} end)})
+        unquote({:__block__, [], y_list |> Enum.map(fn y -> {:=, [], [y, gen_var]} end)})
         fn th1 ->
           th2 = Map.merge(th1, Map.new(unquote(Enum.zip(x_list, t_list))))
           (unquote(tr_goals(delta, goals))).(th2)
@@ -253,6 +249,7 @@ defmodule Core do
     |> :lists.flatten()
     |> Enum.filter(fn arg -> is_logic_variable?(arg) end)
     |> Enum.uniq()
+    |> Enum.map(fn {:__aliases__, _metadata, [logic_variable]} -> logic_variable end)
   end
 
   defp choice_goals(delta, [{:do, do_block}, {:else, else_block} | rest]) do
