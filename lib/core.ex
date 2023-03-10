@@ -14,8 +14,6 @@ defmodule Core do
   # delta is a map that relates Logic vars with Elixir terms
   # TODO add delta type
 
-  # ? Should must be add types for AST nodes??
-
   ##########
   # Guards #
   ##########
@@ -128,30 +126,111 @@ defmodule Core do
     end
   end
 
+  def tr_goal(delta, {:@, _metadata, at_arguments}) do
+    th = Macro.unique_var(:th, __MODULE__)
+    theta = Macro.unique_var(:theta, __MODULE__)
+    groundify = groundify(th, tr_term(delta, theta, at_arguments))
+    quote do
+      fn unquote(th) ->
+        checkB(th, unquote(groundify))
+      end
+    end
+  end
+
   # TODO test it
   def tr_goal(delta, {predicate_name, [], args}) do
-    fn th ->
-      tr_term_args = Enum.map(args, fn arg -> tr_term(delta, th, arg) end)
+    th = Macro.unique_var(:th, __MODULE__)
+    tr_term_args = Enum.map(args, fn arg -> tr_term(delta, th, arg) end)
 
-      quote do
-        unquote({predicate_name, [], [tr_term_args]}).(th)
+    quote do
+      fn unquote(th) ->
+        unquote({predicate_name, [], tr_term_args}).(th)
       end
     end
   end
 
   # TODO improve
-  def tr_term(_delta, _x, lit) when is_integer(lit) or is_binary(lit) or is_boolean(lit),
-    do: {:ground, lit}
+  def tr_term(delta, _x, {:__aliases__, _metadata, [logic_var]}), do: {:var, delta[logic_var]}
 
-  def tr_term(delta, _x, {:__aliases__, _metadata, [logic_var]}) do
-    {:var, delta[logic_var]}
+  def tr_term(delta, x, {function_name, [], arguments}) do
+    [x_tuple, t_tuple] = case arguments do
+      [] -> [{}, {}]
+      _ ->
+        [
+          1..length(arguments)
+          |>
+          Enum.map(fn x ->
+            String.to_atom("x#{x}") |> Macro.unique_var(__MODULE__) end)
+          |>
+          List.to_tuple,
+          arguments |> List.to_tuple
+        ]
+    end
+    x_list = x_tuple |> Tuple.to_list()
+    groundify = "groundify" |> String.to_atom() |> Macro.unique_var(__MODULE__)
+    quote do
+      unquote({:__block__, [], [x_tuple, t_tuple] |> Enum.map(fn {xx, tx} -> {:=, [], [xx, {groundify, [], [x, tr_term(delta, x, tx)]}]} end)})
+      unquote({:ground, {function_name, [], x_list}})
+    end
   end
+
+  def tr_term(_delta, _x, []), do: []
+
+  def tr_term(delta, x, [h | t]) do
+    head = tr_term(delta, x, h)
+    tail = tr_term(delta, x, t)
+    build_list = "build_list" |> String.to_atom |> Macro.unique_var(__MODULE__)
+    quote do
+      unquote({build_list, [], [head, tail]})
+    end
+  end
+
+  def tr_term(delta, x, tuple) when is_tuple(tuple) do
+    list = tuple |> Tuple.to_list() |> Enum.map(fn tx -> tr_term(delta, x, tx) end)
+    build_tuple = "build_tuple" |> String.to_atom |> Macro.unique_var(__MODULE__)
+    quote do
+      unquote({build_tuple, [], [list]})
+    end
+  end
+
+  def tr_term(_delta, _x, lit), do: {:ground, lit}
 
   def unify_gen(theta, t1, t2) do
     case unify(t1, t2, theta) do
       :unmatch -> []
       theta2 -> [theta2]
     end
+  end
+
+  def build_tuple(terms) do
+    if Enum.all?(terms, &match?({:ground, _}, &1)) do
+      {:ground,
+        terms
+        |> Enum.map(fn {:ground, t} -> t end)
+        |> List.to_tuple() }
+    else
+      List.to_tuple(terms)
+    end
+  end
+
+  def build_list({:ground, h}, {:ground, t}), do: {:ground, [h | t]}
+  def build_list(h, t), do: [h | t]
+
+  def groundify(_theta, {:ground, t}), do: t
+  def groundify(theta, {:var, x}) when is_map_key(theta, x) do
+    theta[x]
+  end
+  def groundify(_theta, {:var, x}) do
+    throw "#{x} is not instantiated"
+  end
+  def groundify(theta, t) when is_tuple(t) do
+    t
+    |> Tuple.to_list()
+    |> Enum.map(&groundify(theta, &1))
+    |> List.to_tuple()
+  end
+  def groundify(theta, [t1 | t2]) do
+    [groundify(theta, t1) | groundify(theta, t2)]
   end
 
   #####################
@@ -259,6 +338,46 @@ defmodule Core do
     end
   end
 
+  # TODO fix the code to pass this function
+  def p10 do
+    quote do
+      defcore append(Xs, Ys, Zs) do
+        choice do
+          Xs = []
+          Ys = Zs
+        else
+          Xs = [X | XX]
+          Zs = [X | ZZ]
+          append(XX, Ys, ZZ)
+        end
+      end
+    end
+  end
+
+  # TODO fix the code to pass this function
+  def p11 do
+    quote do
+      defcore pred11() do
+        X = [X1 | X2]
+      end
+    end
+  end
+
+  def p12 do
+    quote do
+      defcore pred12() do
+        pred1(1)
+      end
+    end
+  end
+
+  def p13 do
+    quote do
+      defcore pred13(X) do
+        pred1(X)
+      end
+    end
+  end
   #####################
   # Private Functions #
   #####################
