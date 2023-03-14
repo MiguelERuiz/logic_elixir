@@ -6,7 +6,7 @@ defmodule Template do
   end
 
   defcore pred2(X, Y) do
-    X = 5,
+    X = 5
     Y = 6
   end
 
@@ -19,26 +19,27 @@ defmodule Template do
   end
 
   defcore pred4(X, Y) do
-    (choice do
+    choice do
       X = 1
     else
       X = 2
-    end),
+    end
+
     Y = 3
   end
 
   defcore pred5(X, Y) do
-    X = Z,
+    X = Z
     Y = Z
   end
 
   defcore append(XS, YS, ZS) do
     choice do
-      Xs = [],
+      Xs = []
       Ys = Zs
     else
-      Xs = [X|XX],
-      Ys = [X|ZZ],
+      Xs = [X | XX]
+      Ys = [X | ZZ]
       append(XX, Ys, ZZ)
     end
   end

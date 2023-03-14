@@ -14,7 +14,8 @@ defmodule Pruebas do
   end
 
   def unify_gen(theta, t1, t2) do
-    IO.puts("Unifying #{inspect(t1)} and #{inspect(t2)} under #{inspect(theta)}")
+    # IO.puts("Unifying #{inspect(t1)} and #{inspect(t2)} under #{inspect(theta)}")
+
     case Unification.unify(t1, t2, theta) do
       :unmatch -> []
       theta2 -> [theta2]
@@ -131,18 +132,18 @@ defmodule Pruebas do
       (fn th3 ->
          (fn th4 ->
             [
-              (fn th5 ->
+              fn th5 ->
                 (fn th6 ->
-                    unify_gen(th6, {:var, x1}, {:ground, 1}) end).(th5)
-                    |> Stream.flat_map(fn th7 -> (fn th8 -> [th8] end).(th7)
-                end)
-              end),
-              (fn th9 ->
+                   unify_gen(th6, {:var, x1}, {:ground, 1})
+                 end).(th5)
+                |> Stream.flat_map(fn th7 -> (fn th8 -> [th8] end).(th7) end)
+              end,
+              fn th9 ->
                 (fn th10 ->
-                  unify_gen(th10, {:var, x1}, {:ground, 2}) end).(th9)
-                  |> Stream.flat_map(fn th11 -> (fn th12 -> [th12] end).(th11)
-                end)
-              end)
+                   unify_gen(th10, {:var, x1}, {:ground, 2})
+                 end).(th9)
+                |> Stream.flat_map(fn th11 -> (fn th12 -> [th12] end).(th11) end)
+              end
             ]
             |> Stream.flat_map(fn f -> f.(th4) end)
           end).(th3)
@@ -171,28 +172,31 @@ defmodule Pruebas do
   def pred5(t1, t2) do
     x1 = gen_var()
     x2 = gen_var()
+
     fn th1 ->
       th2 = Map.merge(th1, Map.new([{x1, t1}, {x2, t2}]))
+
       (fn th3 ->
-        (fn th4 -> [
-          (fn th5 ->
-            (fn th6 -> unify_gen(th6, {:var, x1}, {:ground, 1}) end).(th5)
-            |> Stream.flat_map(fn th7 -> (fn th8 -> [th8] end).(th7) end)
-          end),
-          (fn th9 ->
-            (fn th10 -> unify_gen(th10, {:var, x1}, {:ground, 2}) end).(th9)
-            |> Stream.flat_map(fn th11 -> (fn th12 -> [th12] end).(th11) end)
-          end)
-          ]
-          |> Stream.flat_map(fn f -> f.(th4) end)
-        end).(th3)
-        |> Stream.flat_map(fn th13 ->
-                            (fn th14 ->
-                              (fn th15 -> unify_gen(th15, {:var, x2}, {:ground, 3}) end).(th14)
-                              |> Stream.flat_map(fn th16 -> (fn th17 -> [th17] end).(th16) end)
-                             end).(th13)
-                           end)
-      end).(th2)
+         (fn th4 ->
+            [
+              fn th5 ->
+                (fn th6 -> unify_gen(th6, {:var, x1}, {:ground, 1}) end).(th5)
+                |> Stream.flat_map(fn th7 -> (fn th8 -> [th8] end).(th7) end)
+              end,
+              fn th9 ->
+                (fn th10 -> unify_gen(th10, {:var, x1}, {:ground, 2}) end).(th9)
+                |> Stream.flat_map(fn th11 -> (fn th12 -> [th12] end).(th11) end)
+              end
+            ]
+            |> Stream.flat_map(fn f -> f.(th4) end)
+          end).(th3)
+         |> Stream.flat_map(fn th13 ->
+           (fn th14 ->
+              (fn th15 -> unify_gen(th15, {:var, x2}, {:ground, 3}) end).(th14)
+              |> Stream.flat_map(fn th16 -> (fn th17 -> [th17] end).(th16) end)
+            end).(th13)
+         end)
+       end).(th2)
       |> Stream.map(&Map.drop(&1, [x1, x2]))
     end
   end
