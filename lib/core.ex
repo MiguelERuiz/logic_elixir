@@ -210,36 +210,40 @@ defmodule Core do
   def check_b(_, nil), do: []
   def check_b(theta, _), do: [theta]
 
-  # TODO verify with Manuel
   def build_tuple(terms) do
-    # if Enum.all?(terms, &match?({:ground, _}, &1)) do
-    #   {:ground,
-    #     terms
-    #     |> Enum.map(fn {:ground, t} -> t end)
-    #     |> List.to_tuple() }
-    # else
+    if Enum.all?(terms, &match?({:ground, _}, &1)) do
+      {:ground,
+        terms
+        |> Enum.map(fn {:ground, t} -> t end)
+        |> List.to_tuple() }
+    else
       List.to_tuple(terms)
-    # end
+    end
   end
 
   def build_list({:ground, h}, {:ground, t}), do: {:ground, [h | t]}
   def build_list(h, t), do: [h | t]
 
   def groundify(_theta, {:ground, t}), do: t
-  # TODO verify with Manuel
+
   def groundify(theta, {:var, x}) when is_map_key(theta, x) do
-    {:ground, t} = theta[x]
-    t
+    case theta[x] do
+      {:ground, t} -> t
+      _ -> throw "#{x} is not bound to a fully instatiated term"
+    end
   end
+
   def groundify(_theta, {:var, x}) do
     throw "#{x} is not instantiated"
   end
+
   def groundify(theta, t) when is_tuple(t) do
     t
     |> Tuple.to_list()
     |> Enum.map(&groundify(theta, &1))
     |> List.to_tuple()
   end
+
   def groundify(theta, [t1 | t2]) do
     [groundify(theta, t1) | groundify(theta, t2)]
   end
@@ -399,6 +403,27 @@ defmodule Core do
       defcore pred14(Z) do
         X = 3
         Y = 4
+        Z = g(X, Y)
+      end
+    end
+  end
+
+  def p140 do
+    quote do
+      defcore pred140(Z) do
+        X = 3
+        Y = W
+        Z = g(X, Y)
+      end
+    end
+  end
+
+  def p141 do
+    quote do
+      defcore pred141(Z) do
+        X = 3
+        Y = W
+        W = 15
         Z = g(X, Y)
       end
     end
