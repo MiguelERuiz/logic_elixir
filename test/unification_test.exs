@@ -100,6 +100,10 @@ defmodule UnificationTest do
              [{{:var, "X"}, {:ground, 3}}, {:ground, 5}, {:ground, :a}],
              %{}
            ) == %{"Y" => {:ground, {5, 3}}, "X" => {:ground, 5}, "Z" => {:ground, :a}}
+
+    assert unify(
+      [{:ground, 3} | {:var, "Y"}], {:ground, [3 | []]}, %{}
+    ) == %{"Y" => {:ground, []}}
   end
 
   test "Verifies [Clash] rule" do
