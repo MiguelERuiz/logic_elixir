@@ -698,8 +698,8 @@ defmodule Example do
                      th,
                      (
                        (
-                         x1 = groundify(%{}, {:var, x1})
-                         x2 = groundify(%{}, {:ground, 4})
+                         x1 = groundify(th, {:var, x1})
+                         x2 = groundify(th, {:ground, 4})
                        )
 
                        {:ground, x1 + x2}
@@ -714,39 +714,4 @@ defmodule Example do
       |> Stream.map(&Map.drop(&1, [x1]))
     end
   end
-
-  # def pred28(t1) do
-  #   x1 = VarBuilder.gen_var
-  #   nil
-
-  #   fn th1 ->
-  #     th2 = Map.merge(th1, Map.new([{x1, t1}]))
-
-  #     (fn th1 ->
-  #        (fn th -> unify_gen(th, {:var, x1}, {:ground, 3}) end).(th1)
-  #        |> Stream.flat_map(fn th2 ->
-  #          (fn th1 ->
-  #             (fn th ->
-  #                check_b(
-  #                  th,
-  #                  groundify(
-  #                    th,
-  #                    (
-  #                      (
-  #                        x1 = groundify(theta, {:var, x1})
-  #                        x2 = groundify(theta, {:ground, 4})
-  #                      )
-
-  #                      {:ground, x1 + x2}
-  #                    )
-  #                  )
-  #                )
-  #              end).(th1)
-  #             |> Stream.flat_map(fn th2 -> (fn th -> [th] end).(th2) end)
-  #           end).(th2)
-  #        end)
-  #      end).(th2)
-  #     |> Stream.map(&Map.drop(&1, [x1]))
-  #   end
-  # end
 end

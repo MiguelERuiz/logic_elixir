@@ -129,13 +129,12 @@ defmodule Core do
   # TODO verify proper behavior
   def tr_goal(delta, {:@, _metadata, [at_arguments]}) do
     th = Macro.unique_var(:th, __MODULE__)
-    theta = Macro.unique_var(:theta, __MODULE__)
     check_b = "check_b" |> String.to_atom |> Macro.unique_var(__MODULE__)
     groundify = "groundify" |> String.to_atom() |> Macro.unique_var(__MODULE__)
 
     quote do
       fn unquote(th) ->
-        unquote({check_b, [], [th, {groundify, [], [th, tr_term(delta, theta, at_arguments)]}]})
+        unquote({check_b, [], [th, {groundify, [], [th, tr_term(delta, th, at_arguments)]}]})
       end
     end
   end
