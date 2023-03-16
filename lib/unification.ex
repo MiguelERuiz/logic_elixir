@@ -84,7 +84,10 @@ defmodule Unification do
   def unify(t1, t2, theta) when is_list_term(t1) and is_list_term(t2) do
     c1 = components_of_list(t1)
     c2 = components_of_list(t2)
-    unify(c1, c2, theta)
+    case length(c1) == length(c2) do
+      false -> :unmatch
+      true -> unify(c1, c2, theta)
+    end
   end
 
   # [Clash] Rule
