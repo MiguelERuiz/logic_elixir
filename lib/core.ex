@@ -153,7 +153,7 @@ defmodule Core do
 
   def tr_term(delta, _x, {:__aliases__, _metadata, [logic_var]}), do: {:var, delta[logic_var]}
 
-  def tr_term(delta, x, {function_name, [], arguments}) do
+  def tr_term(delta, x, {function_name, _metadata, arguments}) do
     x_args = case arguments do
       [] -> %{}
       _ ->
