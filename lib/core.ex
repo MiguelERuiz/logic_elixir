@@ -179,6 +179,16 @@ defmodule Core do
 
   def tr_term(_delta, _x, []), do: []
 
+  def tr_term(delta, x, [{:|, [], [t, sublist]}]) do
+    head = tr_term(delta, x, t)
+    tail = case sublist do
+      [{:|, [], _}] -> tr_term(delta, x, sublist)
+      [tx] -> tr_term(delta, x, tx)
+      _ -> tr_term(delta, x, sublist)
+    end
+    List.flatten([head, tail])
+  end
+
   def tr_term(delta, x, [h | t]) do
     head = tr_term(delta, x, h)
     tail = tr_term(delta, x, t)
@@ -393,8 +403,6 @@ defmodule Core do
     end
   end
 
-  # TODO ask if this is the correct way
-  # def g({:ground, x}, {:ground, y}), do: x + y
   def g(x, y), do: x + y
 
   def p14 do
@@ -545,6 +553,40 @@ defmodule Core do
     end
   end
 
+  def p29 do
+    quote do
+      defcore pred29(X) do
+        X = [1 | []]
+      end
+    end
+  end
+
+  def p30 do
+    quote do
+      defcore pred30(X) do
+        X = [1 | [2]]
+      end
+    end
+  end
+
+  def p301 do
+    quote do
+      defcore pred30(X) do
+        X = [1 | [2 | []]]
+      end
+    end
+  end
+
+  def p31 do
+    quote do
+      defcore pred31(X, Y) do
+        X = 1
+        Y = [X | [2 | [3 |[]]]]
+      end
+    end
+  end
+
+
   #####################
   # Private Functions #
   #####################
@@ -578,6 +620,7 @@ defmodule Core do
 
   defp flat_terms({:__aliases__, _metadata, [logic_variable]} = term) when is_atom(logic_variable), do: term
   defp flat_terms(terms) when is_tuple(terms), do: Tuple.to_list(terms)
+  defp flat_terms([{:|, [], terms}]), do: terms
   defp flat_terms(terms) when is_list(terms), do: terms
   defp flat_terms(terms), do: terms
 
