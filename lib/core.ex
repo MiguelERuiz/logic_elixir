@@ -5,8 +5,6 @@ defmodule Core do
   import Unification, only: [unify: 3]
   require Logger
 
-  # TODO investigate the way of making VarBuilder.start_link automatically
-
   #########
   # Types #
   #########
@@ -378,7 +376,6 @@ defmodule Core do
     end
   end
 
-  # TODO fix the code to pass this function
   def p11 do
     quote do
       defcore pred11() do
