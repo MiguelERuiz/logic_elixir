@@ -103,7 +103,7 @@ defmodule Core do
     end
   end
 
-  def tr_goal(delta, {:=, [], [t1, t2]}) do
+  def tr_goal(delta, {:=, _metadata, [t1, t2]}) do
     th = Macro.unique_var(:th, __MODULE__)
     term1 = tr_term(delta, th, t1)
     term2 = tr_term(delta, th, t2)
@@ -115,7 +115,7 @@ defmodule Core do
     end
   end
 
-  def tr_goal(delta, {:choice, [], [choice_block]}) do
+  def tr_goal(delta, {:choice, _metadata, [choice_block]}) do
     th = Macro.unique_var(:th, __MODULE__)
     goals = choice_goals(delta, choice_block)
 
@@ -139,7 +139,7 @@ defmodule Core do
     end
   end
 
-  def tr_goal(delta, {predicate_name, [], args}) do
+  def tr_goal(delta, {predicate_name, _metadata, args}) do
     th = Macro.unique_var(:th, __MODULE__)
     tr_term_args = Enum.map(args, fn arg -> tr_term(delta, th, arg) end)
 
@@ -179,7 +179,7 @@ defmodule Core do
 
   def tr_term(_delta, _x, []), do: []
 
-  def tr_term(delta, x, [{:|, [], [t, sublist]}]) do
+  def tr_term(delta, x, [{:|, _metadata, [t, sublist]}]) do
     head = tr_term(delta, x, t)
     tail = case sublist do
       [{:|, [], _}] -> tr_term(delta, x, sublist)
