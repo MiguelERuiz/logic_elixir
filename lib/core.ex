@@ -384,6 +384,14 @@ defmodule Core do
     end
   end
 
+  def p110 do
+    quote do
+      defcore pred110(X) do
+        X = [X1 | X2]
+      end
+    end
+  end
+
   def p12 do
     quote do
       defcore pred12() do
@@ -583,6 +591,46 @@ defmodule Core do
     end
   end
 
+  def p32 do
+    quote do
+      defcore is_ordered(Xs) do
+        choice do
+          Xs = []
+        else
+          Xs = [X | []]
+        else
+          Xs = [X | [Y | [Ys]]]
+          @(X <= Y)
+          is_ordered([Y | [Ys]])
+        end
+      end
+    end
+  end
+
+  def p320 do
+    quote do
+      defcore p320(X) do
+        choice do
+          X = []
+        else
+          X = [Y | []]
+        else
+          X = [Y | [Z | [T]]]
+          @(Y < Z)
+        # else
+        #   X = [Y | [Z]]
+        end
+      end
+    end
+  end
+
+  def p33 do
+    quote do
+      defcore pred33(X, Y, Z, T) do
+        X = [Y | [Z | [T]]]
+      end
+    end
+  end
 
   #####################
   # Private Functions #
@@ -613,13 +661,24 @@ defmodule Core do
 
   defp vars({:@, _metadata, at_arguments}), do: at_arguments
 
-  defp vars({_predicate_name, _metadata, arguments}), do: vars(arguments)
+  defp vars(_) do
+    []
+  end
 
   defp flat_terms({:__aliases__, _metadata, [logic_variable]} = term) when is_atom(logic_variable), do: term
   defp flat_terms(terms) when is_tuple(terms), do: Tuple.to_list(terms)
-  defp flat_terms([{:|, [], terms}]), do: terms
+  defp flat_terms([{:|, [], terms}]), do: flat_pipe_terms(terms)
   defp flat_terms(terms) when is_list(terms), do: terms
   defp flat_terms(terms), do: terms
+
+  defp flat_pipe_terms([t1, t2]) do
+    ts = case t2 do
+      [] -> []
+      [{:|, [], terms}] -> flat_pipe_terms(terms)
+      _ -> t2
+    end
+    [t1, ts]
+  end
 
   defp choice_vars([{:do, do_block}, {:else, else_block} | rest]) do
     do_block_vars = vars(do_block)
