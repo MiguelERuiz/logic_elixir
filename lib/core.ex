@@ -739,5 +739,10 @@ defmodule Core do
        when is_atom(logic_variable),
        do: true
 
+  defp is_logic_variable?(term) when is_atom(term) do
+    string_term = Atom.to_string(term)
+    string_term == String.upcase(string_term)
+  end
+
   defp is_logic_variable?(_), do: false
 end
