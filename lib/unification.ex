@@ -26,7 +26,7 @@ defmodule Unification do
   ##########
 
   defguardp is_tuple_term(t) when is_tuple(t) and (elem(t, 0) != :ground or is_tuple(elem(t, 1)))
-  defguardp is_list_term(t) when is_list(t) or (is_tuple(t) and (elem(t, 0) == :ground or is_list(elem(t, 1))))
+  defguardp is_list_term(t) when is_list(t) or (is_tuple(t) and (elem(t, 0) == :ground and is_list(elem(t, 1))))
   defguardp belongs_to(theta, t) when is_map_key(theta, t)
 
   #############
@@ -82,8 +82,12 @@ defmodule Unification do
   end
 
   def unify(t1, t2, theta) when is_list_term(t1) and is_list_term(t2) do
+    # Loger.info("t1: #{inspect(t1)}")
+    # Loger.info("t2: #{inspect(t2)}")
     c1 = components_of_list(t1)
+    # Loger.info("c1: #{inspect(c1)}")
     c2 = components_of_list(t2)
+    # Loger.info("c2: #{inspect(c2)}")
     case length(c1) == length(c2) do
       false -> :unmatch
       true -> unify(c1, c2, theta)

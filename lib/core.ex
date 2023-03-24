@@ -26,17 +26,10 @@ defmodule Core do
 
   defmacro defcore(pred_name, [do: do_block]) do
     # Loger.info("pred_name: #{inspect(pred_name)}")
-    fun = tr_def(pred_name, do_block)
-    quote do
-      unquote(fun)#.(%{}) |> Enum.into([])
-    end
-
-    # # Loger.info("a: #{inspect(a)}")
-    # # Loger.info("b: #{inspect(b)}")
-    # # Loger.info("c: #{inspect(c)}")
-    # Loger.info("fun: #{inspect(fun)}")
-    Macro.to_string(fun) |> IO.puts
-    # c |> Macro.to_string
+    result = tr_def(pred_name, do_block)
+    Macro.to_string(result) |> IO.puts()
+    IO.inspect(result, limit: :infinity)
+    result
   end
 
   #############
@@ -92,7 +85,11 @@ defmodule Core do
     delta_values = :lists.flatten([x_list, y_list])
     delta = Enum.zip(delta_keys, delta_values) |> Enum.into(%{})
 
-    gen_var = "VarBuilder.gen_var" |> String.to_atom() |> Macro.unique_var(__MODULE__)
+    # gen_var = "VarBuilder.gen_var()" |> String.to_atom() |> Macro.unique_var(__MODULE__)
+
+    gen_var = quote do
+      VarBuilder.gen_var()
+    end
 
     quote do
       def unquote({predicate_name, [], t_list}) do
@@ -131,7 +128,7 @@ defmodule Core do
 
     quote do
       fn unquote(th) ->
-        unify_gen(th, unquote(term1), unquote(term2))
+        unify_gen(unquote(th), unquote(term1), unquote(term2))
       end
     end
   end
@@ -142,7 +139,7 @@ defmodule Core do
 
     quote do
       fn unquote(th) ->
-        unquote(goals) |> Stream.flat_map(fn f -> f.(th) end)
+        unquote(goals) |> Stream.flat_map(fn f -> f.(unquote(th)) end)
       end
     end
   end
@@ -166,7 +163,7 @@ defmodule Core do
 
     quote do
       fn unquote(th) ->
-        unquote({predicate_name, [], tr_term_args}).(th)
+        unquote({predicate_name, [], tr_term_args}).(unquote(th))
       end
     end
   end
