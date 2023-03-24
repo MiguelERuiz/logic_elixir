@@ -656,10 +656,12 @@ defmodule Core do
   end
 
   defp vars({:__block__, [], block}) do
-    vars(block)
+    vars(block) |> List.flatten()
   end
 
-  defp vars({:@, _metadata, at_arguments}), do: at_arguments
+  defp vars({:@, _metadata, at_arguments}), do: flat_terms(at_arguments)
+
+  defp vars({_predicate_name, _metadata, arguments}), do: flat_terms(arguments)
 
   defp vars(_) do
     []
