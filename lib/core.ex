@@ -16,17 +16,38 @@ defmodule Core do
   # Guards #
   ##########
 
+  ##########
+  # Macros #
+  ##########
+
+  defmacro __before_compile__(_env) do
+    VarBuilder.start_link()
+  end
+
+  defmacro defcore(pred_name, [do: do_block]) do
+    # Loger.info("pred_name: #{inspect(pred_name)}")
+    fun = tr_def(pred_name, do_block)
+    quote do
+      unquote(fun)#.(%{}) |> Enum.into([])
+    end
+
+    # # Loger.info("a: #{inspect(a)}")
+    # # Loger.info("b: #{inspect(b)}")
+    # # Loger.info("c: #{inspect(c)}")
+    # Loger.info("fun: #{inspect(fun)}")
+    Macro.to_string(fun) |> IO.puts
+    # c |> Macro.to_string
+  end
+
   #############
   # Functions #
   #############
 
-  # TODO convert tr_def/1 into tr_def/2
-  # Example
-  # defmacro defcore(pred_name, [do: do_block]) do
-  #   tr_def(pred_name, do_block)
-  # end
-  def tr_def({:defcore, _metadata, [predicate_name_node, [do: do_block]]}) do
-    {predicate_name, [], predicate_args} = predicate_name_node
+  # def tr_def({:defcore, _metadata, [predicate_name_node, [do: do_block]]}) do
+  #   {predicate_name, [], predicate_args} = predicate_name_node
+
+  def tr_def(predicate_name_node, do_block) do
+    {predicate_name, _metadata, predicate_args} = predicate_name_node
 
     goals =
       case do_block do
