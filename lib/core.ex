@@ -53,7 +53,8 @@ defmodule Core do
           }
       end
 
-    vars_goals = goals |> vars() |> Enum.filter(fn var -> not :lists.member(var, logic_vars) end)
+    vars_goals = goals |> vars() |> Enum.filter(fn var -> not Enum.member?(logic_vars, var) end)
+
 
     y_list =
       case vars_goals do
