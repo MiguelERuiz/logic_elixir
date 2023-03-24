@@ -76,6 +76,7 @@ defmodule Core do
 
     vars_goals = goals |> vars() |> Enum.filter(fn var -> not Enum.member?(logic_vars, var) end)
 
+    # Loger.info("VARS IN TR_DEF: #{inspect(vars_goals)}")
 
     y_list =
       case vars_goals do
@@ -659,21 +660,32 @@ defmodule Core do
   #####################
 
   defp vars(goals) when is_list(goals) do
-    goals
-    |> Enum.map(fn goal -> vars(goal) end)
-    |> :lists.flatten()
-    |> Enum.filter(fn arg -> is_logic_variable?(arg) end)
-    |> Enum.uniq()
-    |> Enum.map(fn {:__aliases__, _metadata, [logic_variable]} -> logic_variable end)
+    # Loger.info("GOALS: #{inspect(goals)}")
+    vars_goals = goals
+        |> Enum.map(fn goal -> vars(goal) end)
+    # Loger.info("VARS IN GOALS: #{inspect(vars_goals)}")
+    logic_vars = vars_goals
+        |> :lists.flatten()
+        |> Enum.filter(fn arg -> is_logic_variable?(arg) end)
+        |> Enum.uniq()
+    # Loger.info("VARS AFTER FILTERS: #{inspect(logic_vars)}")
+    logic_vars
+    |> Enum.map(fn {:__aliases__, _metadata, [logic_variable]} -> logic_variable
+                   logic_variable -> logic_variable
+                end)
   end
 
   defp vars({:=, _metadata, [t1, t2]}) do
+    # Loger.info("= OPERATOR: T1: #{inspect(t1)}  T2: #{inspect(t2)}")
     terms1 = flat_terms(t1)
+    # Loger.info("FLAT TERMS of T1: #{inspect(terms1)}")
     terms2 = flat_terms(t2)
+    # Loger.info("FLAT TERMS of T2: #{inspect(terms2)}")
     [terms1, terms2]
   end
 
   defp vars({:choice, [], [choice_block]}) do
+    # Loger.info("CHOICE BLOCK: #{inspect(choice_block)}")
     choice_vars(choice_block)
   end
 
