@@ -28,7 +28,7 @@ defmodule Core do
     # Loger.info("pred_name: #{inspect(pred_name)}")
     result = tr_def(pred_name, do_block)
     Macro.to_string(result) |> IO.puts()
-    IO.inspect(result, limit: :infinity)
+    inspect(result, limit: :infinity)
     result
   end
 
@@ -36,8 +36,10 @@ defmodule Core do
   # Functions #
   #############
 
-  # def tr_def({:defcore, _metadata, [predicate_name_node, [do: do_block]]}) do
-  #   {predicate_name, [], predicate_args} = predicate_name_node
+  # TODO delete this code when defcore macro works as expected
+  def tr_def({:defcore, _metadata, [predicate_name_node, [do: do_block]]}) do
+    tr_def(predicate_name_node, do_block)
+  end
 
   def tr_def(predicate_name_node, do_block) do
     {predicate_name, _metadata, predicate_args} = predicate_name_node

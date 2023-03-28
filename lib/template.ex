@@ -1,21 +1,62 @@
 defmodule Template do
-  # import VarBuilder
   import Core
-  # require Core
 
-  defcore pred(X) do
+  defcore pred1(X) do
     X = 5
-    @(IO.puts({:var, "X"}))
   end
 
-  defcore append(Xs, Ys, Zs) do
+  defcore pred2(X, Y) do
+    X = 5
+    Y = 6
+  end
+
+  defcore pred3(X, Y) do
+    X = Z
+    Y = Z
+  end
+
+  defcore pred4(X) do
+    Z = X
+  end
+
+  defcore pred5() do
+    Z = 1
+  end
+
+  defcore pred6(X) do
     choice do
-      Xs = []
-      Ys = Zs
+      X = 1
     else
-      Xs = [X | XX]
-      Zs = [X | ZZ]
-      append(XX, Ys, ZZ)
+      X = 2
+    end
+  end
+
+  defcore pred7(X) do
+    choice do
+      X = 1
+    else
+      X = 2
+    else
+      X = 3
+    end
+  end
+
+  defcore pred8(X, Y) do
+    choice do
+      X = 1
+    else
+      X = 2
+    end
+    Y = 3
+  end
+
+  defcore pred9(X, Y) do
+    choice do
+      X = 1
+      Y = 3
+    else
+      X = 2
+      Y = 4
     end
   end
 end
