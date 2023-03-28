@@ -59,4 +59,20 @@ defmodule Template do
       Y = 4
     end
   end
+
+  defcore pred10(X) do
+    X = [X1 | X2]
+  end
+
+  defcore pred11() do
+    X = [X1 | X2]
+  end
+
+  defcore pred12() do
+    pred1(1)
+  end
+
+  defcore pred13(X) do
+    pred1(X)
+  end
 end

@@ -702,7 +702,7 @@ defmodule Core do
 
   defp flat_terms({:__aliases__, _metadata, [logic_variable]} = term) when is_atom(logic_variable), do: term
   defp flat_terms(terms) when is_tuple(terms), do: Tuple.to_list(terms)
-  defp flat_terms([{:|, [], terms}]), do: flat_pipe_terms(terms)
+  defp flat_terms([{:|, _metadata, terms}]), do: flat_pipe_terms(terms)
   defp flat_terms(terms) when is_list(terms), do: terms
   defp flat_terms(terms), do: terms
 
