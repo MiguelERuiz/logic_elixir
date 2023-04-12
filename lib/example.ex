@@ -230,6 +230,96 @@ defmodule Example do
     end
   end
 
+  def append(t1, t2, t3) do
+    (
+      x1 = VarBuilder.gen_var
+      x2 = VarBuilder.gen_var
+      x3 = VarBuilder.gen_var
+    )
+
+    (
+      y1 = VarBuilder.gen_var
+      y2 = VarBuilder.gen_var
+      y3 = VarBuilder.gen_var
+    )
+
+    fn th1 ->
+      th2 = Map.merge(th1, Map.new([{x1, t1}, {x2, t2}, {x3, t3}]))
+
+      (fn th1 ->
+         (fn th ->
+            [
+              fn th1 ->
+                (fn th -> unify_gen(th, {:var, x1}, []) end).(th1)
+                |> Stream.flat_map(fn th2 ->
+                  (fn th1 ->
+                     (fn th -> unify_gen(th, {:var, x2}, {:var, x3}) end).(th1)
+                     |> Stream.flat_map(fn th2 -> (fn th -> [th] end).(th2) end)
+                   end).(th2)
+                end)
+              end,
+              fn th1 ->
+                (fn th -> unify_gen(th, {:var, x1}, var: y1, var: y2) end).(th1)
+                |> Stream.flat_map(fn th2 ->
+                  (fn th1 ->
+                     (fn th -> unify_gen(th, {:var, x3}, var: y1, var: y3) end).(th1)
+                     |> Stream.flat_map(fn th2 ->
+                       (fn th1 ->
+                          (fn th -> append({:var, y2}, {:var, x2}, {:var, y3}).(th) end).(th1)
+                          |> Stream.flat_map(fn th2 -> (fn th -> [th] end).(th2) end)
+                        end).(th2)
+                     end)
+                   end).(th2)
+                end)
+              end
+            ]
+            |> Stream.flat_map(fn f -> f.(th) end)
+          end).(th1)
+         |> Stream.flat_map(fn th2 -> (fn th -> [th] end).(th2) end)
+       end).(th2)
+      |> Stream.map(&Map.drop(&1, [x1, x2, x3, y1, y2, y3]))
+    end
+  end
+
+  def pred11 do
+    nil
+
+    (
+      y1 = VarBuilder.gen_var
+      y2 = VarBuilder.gen_var
+      y3 = VarBuilder.gen_var
+    )
+
+    fn th1 ->
+      th2 = Map.merge(th1, Map.new([]))
+
+      (fn th1 ->
+         (fn th -> unify_gen(th, {:var, y1}, var: y2, var: y3) end).(th1)
+         |> Stream.flat_map(fn th2 -> (fn th -> [th] end).(th2) end)
+       end).(th2)
+      |> Stream.map(&Map.drop(&1, [y1, y2, y3]))
+    end
+  end
+
+  def pred110(t1) do
+    x1 = VarBuilder.gen_var
+
+    (
+      y1 = VarBuilder.gen_var
+      y2 = VarBuilder.gen_var
+    )
+
+    fn th1 ->
+      th2 = Map.merge(th1, Map.new([{x1, t1}]))
+
+      (fn th1 ->
+         (fn th -> unify_gen(th, {:var, x1}, var: y1, var: y2) end).(th1)
+         |> Stream.flat_map(fn th2 -> (fn th -> [th] end).(th2) end)
+       end).(th2)
+      |> Stream.map(&Map.drop(&1, [x1, y1, y2]))
+    end
+  end
+
   def pred12 do
     nil
     nil
@@ -287,8 +377,8 @@ defmodule Example do
                             x1 = groundify(th, {:var, y1})
                             x2 = groundify(th, {:var, y2})
                           )
-                          # Logger.info("groundify(th, {:var, y1}): #{inspect(groundify(th, {:var, y1}))}")
-                          # Logger.info("groundify(th, {:var, y2}): #{inspect(groundify(th, {:var, y2}))}")
+                          # # Logger.info("groundify(th, {:var, y1}): #{inspect(groundify(th, {:var, y1}))}")
+                          # # Logger.info("groundify(th, {:var, y2}): #{inspect(groundify(th, {:var, y2}))}")
                           {:ground, g(x1, x2)}
                         )
                       )
@@ -346,51 +436,66 @@ defmodule Example do
     end
   end
 
-  def pred141(t1) do
-    x1 = VarBuilder.gen_var
+  # def pred141(t1) do
+  #   x1 = VarBuilder.gen_var
 
-    (
-      y1 = VarBuilder.gen_var
-      y2 = VarBuilder.gen_var
-      y3 = VarBuilder.gen_var
-    )
+  #   (
+  #     y1 = VarBuilder.gen_var
+  #     y2 = VarBuilder.gen_var
+  #     y3 = VarBuilder.gen_var
+  #   )
+
+  #   fn th1 ->
+  #     th2 = Map.merge(th1, Map.new([{x1, t1}]))
+
+  #     (fn th1 ->
+  #        (fn th -> unify_gen(th, {:var, y1}, {:ground, 3}) end).(th1)
+  #        |> Stream.flat_map(fn th2 ->
+  #          (fn th1 ->
+  #             (fn th -> unify_gen(th, {:var, y2}, {:var, y3}) end).(th1)
+  #             |> Stream.flat_map(fn th2 ->
+  #               (fn th1 ->
+  #                  (fn th -> unify_gen(th, {:var, y3}, {:ground, 15}) end).(th1)
+  #                  |> Stream.flat_map(fn th2 ->
+  #                    (fn th1 ->
+  #                       (fn th ->
+  #                          unify_gen(
+  #                            th,
+  #                            {:var, x1},
+  #                            (
+  #                              (
+  #                                x1 = groundify(th, {:var, y1})
+  #                                x2 = groundify(th, {:var, y2})
+  #                              )
+
+  #                              {:ground, g(x1, x2)}
+  #                            )
+  #                          )
+  #                        end).(th1)
+  #                       |> Stream.flat_map(fn th2 -> (fn th -> [th] end).(th2) end)
+  #                     end).(th2)
+  #                  end)
+  #                end).(th2)
+  #             end)
+  #           end).(th2)
+  #        end)
+  #      end).(th2)
+  #     |> Stream.map(&Map.drop(&1, [x1, y1, y2, y3]))
+  #   end
+  # end
+
+  def pred141() do
+    nil
+    nil
 
     fn th1 ->
-      th2 = Map.merge(th1, Map.new([{x1, t1}]))
+      th2 = Map.merge(th1, Map.new([]))
 
       (fn th1 ->
-         (fn th -> unify_gen(th, {:var, y1}, {:ground, 3}) end).(th1)
-         |> Stream.flat_map(fn th2 ->
-           (fn th1 ->
-              (fn th -> unify_gen(th, {:var, y2}, {:var, y3}) end).(th1)
-              |> Stream.flat_map(fn th2 ->
-                (fn th1 ->
-                   (fn th -> unify_gen(th, {:var, y3}, {:ground, 15}) end).(th1)
-                   |> Stream.flat_map(fn th2 ->
-                     (fn th1 ->
-                        (fn th ->
-                           unify_gen(
-                             th,
-                             {:var, x1},
-                             (
-                               (
-                                 x1 = groundify(th, {:var, y1})
-                                 x2 = groundify(th, {:var, y2})
-                               )
-
-                               {:ground, g(x1, x2)}
-                             )
-                           )
-                         end).(th1)
-                        |> Stream.flat_map(fn th2 -> (fn th -> [th] end).(th2) end)
-                      end).(th2)
-                   end)
-                 end).(th2)
-              end)
-            end).(th2)
-         end)
+         (fn th -> g({:ground, 3}, {:ground, 4}).(th) end).(th1)
+         |> Stream.flat_map(fn th2 -> (fn th -> [th] end).(th2) end)
        end).(th2)
-      |> Stream.map(&Map.drop(&1, [x1, y1, y2, y3]))
+      |> Stream.map(&Map.drop(&1, []))
     end
   end
 
@@ -486,6 +591,21 @@ defmodule Example do
          |> Stream.flat_map(fn th2 -> (fn th -> [th] end).(th2) end)
        end).(th2)
       |> Stream.map(&Map.drop(&1, [x1, x2]))
+    end
+  end
+
+  def pred19() do
+    nil
+    y1 = VarBuilder.gen_var()
+
+    fn th1 ->
+      th2 = Map.merge(th1, Map.new([]))
+
+      (fn th1 ->
+         (fn th -> pred1({:var, y1}).(th) end).(th1)
+         |> Stream.flat_map(fn th2 -> (fn th -> [th] end).(th2) end)
+       end).(th2)
+      |> Stream.map(&Map.drop(&1, [y1]))
     end
   end
 
@@ -747,6 +867,21 @@ defmodule Example do
     end
   end
 
+  def pred292(t1) do
+    x1 = VarBuilder.gen_var
+    nil
+
+    fn th1 ->
+      th2 = Map.merge(th1, Map.new([{x1, t1}]))
+
+      (fn th1 ->
+         (fn th -> unify_gen(th, {:var, x1}, ground: 1) end).(th1)
+         |> Stream.flat_map(fn th2 -> (fn th -> [th] end).(th2) end)
+       end).(th2)
+      |> Stream.map(&Map.drop(&1, [x1]))
+    end
+  end
+
   def pred30(t1) do
     x1 = VarBuilder.gen_var
     nil
@@ -763,6 +898,21 @@ defmodule Example do
   end
 
   def pred301(t1) do
+    x1 = VarBuilder.gen_var
+    nil
+
+    fn th1 ->
+      th2 = Map.merge(th1, Map.new([{x1, t1}]))
+
+      (fn th1 ->
+         (fn th -> unify_gen(th, {:var, x1}, ground: 1, ground: 2) end).(th1)
+         |> Stream.flat_map(fn th2 -> (fn th -> [th] end).(th2) end)
+       end).(th2)
+      |> Stream.map(&Map.drop(&1, [x1]))
+    end
+  end
+
+  def pred302(t1) do
     x1 = VarBuilder.gen_var
     nil
 
@@ -798,6 +948,50 @@ defmodule Example do
          end)
        end).(th2)
       |> Stream.map(&Map.drop(&1, [x1, x2]))
+    end
+  end
+
+  def pred311(t1, t2) do
+    (
+      x1 = VarBuilder.gen_var
+      x2 = VarBuilder.gen_var
+    )
+
+    nil
+
+    fn th1 ->
+      th2 = Map.merge(th1, Map.new([{x1, t1}, {x2, t2}]))
+
+      (fn th1 ->
+         (fn th -> unify_gen(th, {:var, x1}, {:ground, 1}) end).(th1)
+         |> Stream.flat_map(fn th2 ->
+           (fn th1 ->
+              (fn th -> unify_gen(th, {:var, x2}, var: x1, ground: 2, ground: 3) end).(th1)
+              |> Stream.flat_map(fn th2 -> (fn th -> [th] end).(th2) end)
+            end).(th2)
+         end)
+       end).(th2)
+      |> Stream.map(&Map.drop(&1, [x1, x2]))
+    end
+  end
+
+  def pred33(t1) do
+    x1 = VarBuilder.gen_var
+
+    (
+      y1 = VarBuilder.gen_var
+      y2 = VarBuilder.gen_var
+      y3 = VarBuilder.gen_var
+    )
+
+    fn th1 ->
+      th2 = Map.merge(th1, Map.new([{x1, t1}]))
+
+      (fn th1 ->
+         (fn th -> unify_gen(th, {:var, x1}, var: y1, var: y2, var: y3) end).(th1)
+         |> Stream.flat_map(fn th2 -> (fn th -> [th] end).(th2) end)
+       end).(th2)
+      |> Stream.map(&Map.drop(&1, [x1, y1, y2, y3]))
     end
   end
 end
