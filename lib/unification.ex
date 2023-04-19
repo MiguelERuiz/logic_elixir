@@ -11,7 +11,8 @@ defmodule Unification do
   # TODO add map() as part of t() definition
   @type t :: logic_var() | tuple_term() | [t()]
   @type logic_var :: {:var, String.t()}
-  @type tuple_term :: {:ground, term()} | tuple()
+  @type tuple_term :: ground_term() | tuple()
+  @type ground_term :: {:ground, term()}
 
   # theta could be either a map to keep the substitutions or
   # :unmatch atom to represent ⊥ symbol
@@ -25,6 +26,7 @@ defmodule Unification do
   ##########
 
   defguardp is_tuple_term(t) when is_tuple(t) and (elem(t, 0) != :ground or is_tuple(elem(t, 1)))
+  defguardp is_list_term(t) when is_list(t) or (is_tuple(t) and (elem(t, 0) == :ground and is_list(elem(t, 1))))
   defguardp belongs_to(theta, t) when is_map_key(theta, t)
 
   #############
@@ -76,6 +78,19 @@ defmodule Unification do
     case unify(h1, h2, theta) do
       :unmatch -> :unmatch
       theta1 -> unify(t1, t2, theta1)
+    end
+  end
+
+  def unify(t1, t2, theta) when is_list_term(t1) and is_list_term(t2) do
+    # Logger.info("t1: #{inspect(t1)}")
+    # Logger.info("t2: #{inspect(t2)}")
+    c1 = components_of_list(t1)
+    # Logger.info("c1: #{inspect(c1)}")
+    c2 = components_of_list(t2)
+    # Logger.info("c2: #{inspect(c2)}")
+    case length(c1) == length(c2) do
+      false -> :unmatch
+      true -> unify(c1, c2, theta)
     end
   end
 
@@ -134,8 +149,12 @@ defmodule Unification do
   end
 
   @spec components_of(tuple()) :: [term()]
-  defp components_of({:ground, t}), do: Tuple.to_list(t)
+  defp components_of({:ground, t}), do: Tuple.to_list(t) |> Enum.map(&{:ground, &1})
   defp components_of(t) when is_tuple(t), do: Tuple.to_list(t)
+
+  @spec components_of_list(list() | ground_term()) :: [term()]
+  defp components_of_list({:ground, t}), do: t |> Enum.map(&{:ground, &1})
+  defp components_of_list(t) when is_list(t), do: t
 
   @spec all_grounds([t()]) :: {:ground, [term()]} | [t()]
   defp all_grounds(t) do
