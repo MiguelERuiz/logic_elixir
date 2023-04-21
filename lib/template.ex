@@ -80,18 +80,18 @@ defmodule Template do
   # (CompileError) The call Elixir.Template.f({'ground', 3}, {'ground', 4}) will never return
   # since it differs in the 1st and 2nd argument from the sucess type arguments (number(), number())
 
-  # def f(x, y), do: x + y
+  def f(x, y), do: x + y
 
   # defcore pred141() do
   #   f(3, 4)
   # end
 
   # (CompileError) Invalid call groundify(th, {'var', y1})
-  # defcore pred14(Z) do
-  #   X = 3
-  #   Y = 4
-  #   Z = f(X, Y)
-  # end
+  defcore pred14(Z) do
+    X = 3
+    Y = 4
+    Z = f(X, Y)
+  end
 
   defcore append(Xs, Ys, Zs) do
     choice do
@@ -104,10 +104,14 @@ defmodule Template do
     end
   end
 
+  defcore cosa(Xs, Ys, Zs) do
+    Xs = [2 | 4]
+  end
+
   # (CompileError) invalid call build_tuple(var: x1, var: x2)
-  # defcore pred16(X, Y) do
-  #   {X, Y} = {1, 2}
-  # end
+  defcore pred16(X, Y) do
+    {X, Y} = {1, 2}
+  end
 
   # (CompileError) invalid call build_tuple(var: y1, var: y2)
   # defcore pred17(X, Y) do
