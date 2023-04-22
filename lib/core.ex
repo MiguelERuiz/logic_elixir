@@ -146,15 +146,12 @@ defmodule Core do
     end
   end
 
-  # TODO verify proper behavior
   def tr_goal(delta, {:@, _metadata, [at_arguments]}) do
     th = Macro.unique_var(:th, __MODULE__)
-    check_b = "check_b" |> String.to_atom |> Macro.unique_var(__MODULE__)
-    groundify = "groundify" |> String.to_atom() |> Macro.unique_var(__MODULE__)
 
     quote do
       fn unquote(th) ->
-        unquote({check_b, [], [th, {groundify, [], [th, tr_term(delta, th, at_arguments)]}]})
+        check_b(unquote(th), groundify(unquote(th), unquote(tr_term(delta, th, at_arguments))))
       end
     end
   end
@@ -187,14 +184,15 @@ defmodule Core do
     end
 
     xs = x_args |> Map.keys
-    #groundify = "groundify" |> String.to_atom() |> Macro.unique_var(__MODULE__)
     quote do
-      unquote({:__block__, [], x_args |> Enum.map(fn {xx, tx} ->
-                                                    {:=, [], [xx, {:groundify, [], [x, tr_term(delta, x, tx)]}]}
-                                                    #{:=, [], [xx, (quote do: groundify(unquote(x), unquote(tr_term(delta, x, tx))))]}
-                                                    #(quote do: unquote(xx) = groundify(unquote(x), unquote(tr_term(delta, x, tx))))
-                                                  end)
-      })
+      unquote(
+        {:__block__, [],
+            x_args |> Enum.map(
+                      fn {xx, tx} ->
+                          (quote do: unquote(xx) = groundify(unquote(x), unquote(tr_term(delta, x, tx))))
+                      end)
+        }
+      )
       unquote({:ground, {function_name, [], xs}})
     end
   end
@@ -215,16 +213,12 @@ defmodule Core do
   def tr_term(delta, x, [h | t]) do
     head = tr_term(delta, x, h)
     tail = tr_term(delta, x, t)
-    #build_list = "build_list" |> String.to_atom |> Macro.unique_var(__MODULE__)
-    {:build_list, [], [head, tail]}
+    quote do: unquote(build_list(head, tail))
   end
 
   def tr_term(delta, x, tuple) when is_tuple(tuple) do
     list = tuple |> Tuple.to_list() |> Enum.map(fn tx -> tr_term(delta, x, tx) end)
-    #build_tuple = "build_tuple" |> String.to_atom |> Macro.unique_var(__MODULE__)
-    quote do
-      unquote({:build_tuple, [], [list]})
-    end
+    quote do: unquote(build_tuple(list))
   end
 
   def tr_term(_delta, _x, lit), do: {:ground, lit}
@@ -432,14 +426,6 @@ defmodule Core do
   end
 
   def g(x, y), do: x + y
-
-  def p141 do
-    quote do
-      defcore pred141() do
-        g(3, 4)
-      end
-    end
-  end
 
   def p14 do
     quote do

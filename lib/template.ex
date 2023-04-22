@@ -76,18 +76,17 @@ defmodule Template do
     pred1(X)
   end
 
-
-  # (CompileError) The call Elixir.Template.f({'ground', 3}, {'ground', 4}) will never return
-  # since it differs in the 1st and 2nd argument from the sucess type arguments (number(), number())
+  defcore pred19() do
+    pred1(X)
+  end
 
   def f(x, y), do: x + y
 
-  # defcore pred141() do
-  #   f(3, 4)
-  # end
+  defcore pred14(X) do
+    X = f(3, 4)
+  end
 
-  # (CompileError) Invalid call groundify(th, {'var', y1})
-  defcore pred14(Z) do
+  defcore pred15(Z) do
     X = 3
     Y = 4
     Z = f(X, Y)
@@ -104,77 +103,63 @@ defmodule Template do
     end
   end
 
-  defcore cosa(Xs, Ys, Zs) do
+  #! Not working as expected
+  defcore pred16(Xs, Ys, Zs) do
     Xs = [2 | 4]
   end
 
-  # (CompileError) invalid call build_tuple(var: x1, var: x2)
-  defcore pred16(X, Y) do
+  defcore pred17(X, Y) do
     {X, Y} = {1, 2}
   end
 
-  # (CompileError) invalid call build_tuple(var: y1, var: y2)
-  # defcore pred17(X, Y) do
-  #   {Z, T} = {X, Y}
-  # end
-
-  # (CompileError)  invalid call build_tuple(var: x1, var: x2)
-  # defcore pred18(X, Y) do
-  #   choice do
-  #     {X, Y} = {1, 3}
-  #   else
-  #     {X, Y} = {2, 4}
-  #   end
-  # end
-
-  defcore pred19() do
-    pred1(X)
+  defcore pred18(X, Y) do
+    {Z, T} = {X, Y}
   end
 
-  # (CompileError) invalid call build_tuple(var: y1, var: y2)
-  # defcore pred20(X) do
-  #   X = {Y, Z}
-  # end
+  defcore pred19(X, Y) do
+    choice do
+      {X, Y} = {1, 3}
+    else
+      {X, Y} = {2, 4}
+    end
+  end
 
-  # defcore pred21(X) do
-  #   X = [1, 2, 3]
-  # end
+  defcore pred20(X) do
+    X = {Y, Z}
+  end
 
-  # (CompileError) invalid call build_list({:var, x1}, build_list({:var, x2}, build_list({:var, x3}, [])))
-  # defcore pred22(X, Y, Z) do
-  #   [X, Y, Z] = [1, 2, 3]
-  # end
+  defcore pred21(X) do
+    X = [1, 2, 3]
+  end
 
-  # (CompileError) invalid call build_list({:var, y1}, build_list({:var, y2}, build_list({:var, y3}, [])))
-  # defcore pred23() do
-  #   [X, Y, Z] = [1, 2, 3]
-  # end
+  defcore pred22(X) do
+    X = {1, 2, 3}
+  end
 
-  # (CompileError) invalid call build_list({:var, y1}, build_list({:var, y2}, build_list({:var, y3}, build_list({:var, y4}, []))))
-  # defcore pred24() do
-  #   [X, Y, Z, T] = [1, 2, 3]
-  # end
+  defcore pred23(X, Y, Z) do
+    [X, Y, Z] = [1, 2, 3]
+  end
 
-  # (CompileError) invalid call build_list(build_list({:ground, 1}, build_list({:ground, 2}, build_list({:ground, 3}, []))), [])
-  # defcore pred25(X) do
-  #   X = [[1, 2, 3]]
-  # end
+  defcore pred24() do
+    [X, Y, Z] = [1, 2, 3]
+  end
 
-  # (CompileError) invalid call check_b(th, groundify(
-#     th,
-#     (
-#       (
-#         x1 = groundify(th, {:ground, 3})
-#         x2 = groundify(th, {:ground, 4})
-#       )
+  defcore pred25() do
+    [X, Y, Z, T] = [1, 2, 3]
+  end
 
-#       {:ground, g(x1, x2)}
-#     )
-#   )
-# )
-  # defcore pred26() do
-  #   @(g(3, 4))
-  # end
+  defcore pred26(X) do
+    X = [[1, 2, 3]]
+  end
+
+  defcore pred27(X) do
+    @(X >= 2)
+  end
+
+  defcore pred28() do
+    X = 3
+    @(X > 2)
+  end
 
   defcore pred29(X) do
     X = [1 | []]
