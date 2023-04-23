@@ -76,17 +76,17 @@ defmodule Template do
     pred1(X)
   end
 
-  defcore pred19() do
+  defcore pred14() do
     pred1(X)
   end
 
   def f(x, y), do: x + y
 
-  defcore pred14(X) do
+  defcore pred15(X) do
     X = f(3, 4)
   end
 
-  defcore pred15(Z) do
+  defcore pred16(Z) do
     X = 3
     Y = 4
     Z = f(X, Y)
@@ -104,19 +104,23 @@ defmodule Template do
   end
 
   #! Not working as expected
-  defcore pred16(Xs, Ys, Zs) do
+  defcore pred17(Xs, Ys, Zs) do
     Xs = [2 | 4]
   end
 
-  defcore pred17(X, Y) do
-    {X, Y} = {1, 2}
+  defcore pred171(Xs) do
+    Xs = [2 | 4]
   end
 
   defcore pred18(X, Y) do
-    {Z, T} = {X, Y}
+    {X, Y} = {1, 2}
   end
 
   defcore pred19(X, Y) do
+    {Z, T} = {X, Y}
+  end
+
+  defcore pred20(X, Y) do
     choice do
       {X, Y} = {1, 3}
     else
@@ -124,48 +128,48 @@ defmodule Template do
     end
   end
 
-  defcore pred20(X) do
+  defcore pred21(X) do
     X = {Y, Z}
   end
 
-  defcore pred21(X) do
+  defcore pred22(X) do
     X = [1, 2, 3]
   end
 
-  defcore pred22(X) do
+  defcore pred23(X) do
     X = {1, 2, 3}
   end
 
-  defcore pred23(X, Y, Z) do
-    [X, Y, Z] = [1, 2, 3]
-  end
-
-  defcore pred24() do
+  defcore pred24(X, Y, Z) do
     [X, Y, Z] = [1, 2, 3]
   end
 
   defcore pred25() do
+    [X, Y, Z] = [1, 2, 3]
+  end
+
+  defcore pred26() do
     [X, Y, Z, T] = [1, 2, 3]
   end
 
-  defcore pred26(X) do
+  defcore pred27(X) do
     X = [[1, 2, 3]]
   end
 
-  defcore pred27(X) do
+  defcore pred28(X) do
     @(X >= 2)
   end
 
-  defcore pred28() do
+  defcore pred29() do
     X = 3
     @(X > 2)
   end
 
-  defcore pred29(X) do
+  defcore pred30(X) do
     X = [1 | []]
   end
 
-  defcore pred30(X) do
+  defcore pred31(X) do
     X = [1 | [2]]
   end
 

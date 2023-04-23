@@ -42,6 +42,7 @@ defmodule Core do
   end
 
   def tr_def(predicate_name_node, do_block) do
+    VarBuilder.start_link
     {predicate_name, _metadata, predicate_args} = predicate_name_node
 
     goals =
@@ -87,16 +88,10 @@ defmodule Core do
     delta_values = :lists.flatten([x_list, y_list])
     delta = Enum.zip(delta_keys, delta_values) |> Enum.into(%{})
 
-    # gen_var = "VarBuilder.gen_var()" |> String.to_atom() |> Macro.unique_var(__MODULE__)
-
-    gen_var = quote do
-      VarBuilder.gen_var()
-    end
-
     quote do
       def unquote({predicate_name, [], t_list}) do
-        unquote({:__block__, [], x_list |> Enum.map(fn x -> {:=, [], [x, gen_var]} end)})
-        unquote({:__block__, [], y_list |> Enum.map(fn y -> {:=, [], [y, gen_var]} end)})
+        unquote({:__block__, [], x_list |> Enum.map(fn x -> (quote do: unquote(x) = unquote(VarBuilder.gen_var())) end)})
+        unquote({:__block__, [], y_list |> Enum.map(fn y -> (quote do: unquote(y) = unquote(VarBuilder.gen_var())) end)})
 
         fn th1 ->
           th2 = Map.merge(th1, Map.new(unquote(Enum.zip(x_list, t_list))))
@@ -253,7 +248,7 @@ defmodule Core do
   def groundify(theta, {:var, x}) when is_map_key(theta, x) do
     case theta[x] do
       {:ground, t} -> t
-      _ -> throw "#{x} is not bound to a fully instatiated term"
+      _ -> throw "#{inspect(theta[x])} is not bound to a fully instatiated term"
     end
   end
 
