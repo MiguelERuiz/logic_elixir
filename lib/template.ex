@@ -103,24 +103,15 @@ defmodule Template do
     end
   end
 
-  #! Not working as expected
-  defcore pred17(Xs, Ys, Zs) do
-    Xs = [2 | 4]
-  end
-
-  defcore pred171(Xs) do
-    Xs = [2 | 4]
-  end
-
-  defcore pred18(X, Y) do
+  defcore pred17(X, Y) do
     {X, Y} = {1, 2}
   end
 
-  defcore pred19(X, Y) do
+  defcore pred18(X, Y) do
     {Z, T} = {X, Y}
   end
 
-  defcore pred20(X, Y) do
+  defcore pred19(X, Y) do
     choice do
       {X, Y} = {1, 3}
     else
@@ -128,12 +119,29 @@ defmodule Template do
     end
   end
 
-  defcore pred21(X) do
+  defcore pred20(X) do
     X = {Y, Z}
   end
 
-  defcore pred22(X) do
-    X = [1, 2, 3]
+  #! Not working as expected
+  # defcore pred(Xs, Ys, Zs) do
+  #   Xs = [2 | 4]
+  # end
+
+  defcore pred21(Xs) do
+    Xs = [2 | 4]
+  end
+
+  defcore pred210(Xs) do
+    Xs = [2 | []]
+  end
+
+  defcore pred211(Xs) do
+    Xs = [2 | [4]]
+  end
+
+  defcore pred212(Xs) do
+    Xs = [2 | [4 | [6]]]
   end
 
   defcore pred23(X) do
@@ -170,19 +178,21 @@ defmodule Template do
   end
 
   defcore pred31(X) do
-    X = [1 | [2]]
+    X = [1 | [2 | []]]
   end
 
-  # (CompileError) invalid call groundify(th, {:ground, 2})
-  # defcore pred31(X) do
-  #   X = [1 | [2 | []]]
-  # end
+  defcore pred32(X, Y) do
+    X = 1
+    Y = [X | [2 | [3 | []]]]
+  end
 
-  # (CompileError) invalid call groundify(th, {:ground, 2})
-  # defcore pred32(X, Y) do
-  #   X = 1
-  #   Y = [X | [2 | [3 |[]]]]
-  # end
+  defcore pred33(X) do
+    X = [Y | [Z | [T]]]
+  end
+
+  defcore pred34(X, Y, Z, T) do
+    X = [Y | [Z | [T]]]
+  end
 
   # (CompileError) invalid call groundify(th, {:var, nil})
   # defcore is_ordered(Xs) do
@@ -198,7 +208,5 @@ defmodule Template do
   # end
 
   # (CompileError) invalid call groundify(th, {:var, x3})
-  # defcore pred33(X, Y, Z, T) do
-  #   X = [Y | [Z | [T]]]
-  # end
+
 end

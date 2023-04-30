@@ -47,7 +47,7 @@ defmodule Core do
 
     goals =
       case do_block do
-        {:__block__, [], do_stmts} -> do_stmts
+        {:__block__, _metadata, do_stmts} -> do_stmts
         _ -> [do_block]
       end
 
@@ -90,8 +90,8 @@ defmodule Core do
 
     quote do
       def unquote({predicate_name, [], t_list}) do
-        unquote({:__block__, [], x_list |> Enum.map(fn x -> (quote do: unquote(x) = unquote(VarBuilder.gen_var())) end)})
-        unquote({:__block__, [], y_list |> Enum.map(fn y -> (quote do: unquote(y) = unquote(VarBuilder.gen_var())) end)})
+        unquote({:__block__, [], x_list |> Enum.map(fn x -> (quote do: unquote(x) = unquote(VarBuilder.gen_var())) end)}) # Replace unquote(VarBuilder.gen_var) with VarBuilder.gen_var
+        unquote({:__block__, [], y_list |> Enum.map(fn y -> (quote do: unquote(y) = unquote(VarBuilder.gen_var())) end)}) # Replace unquote(VarBuilder.gen_var) with VarBuilder.gen_var
 
         fn th1 ->
           th2 = Map.merge(th1, Map.new(unquote(Enum.zip(x_list, t_list))))
@@ -194,14 +194,9 @@ defmodule Core do
 
   def tr_term(_delta, _x, []), do: []
 
-  # TODO: revisar
   def tr_term(delta, x, [{:|, _metadata, [t, sublist]}]) do
     head = tr_term(delta, x, t)
-    tail = case sublist do
-      [{:|, [], _}] -> tr_term(delta, x, sublist)
-      [tx] -> tr_term(delta, x, tx)
-      _ -> tr_term(delta, x, sublist)
-    end
+    tail = tr_term(delta, x, sublist)
     List.flatten([head, tail])
   end
 
@@ -677,12 +672,12 @@ defmodule Core do
     [terms1, terms2]
   end
 
-  defp vars({:choice, [], [choice_block]}) do
+  defp vars({:choice, _metadata, [choice_block]}) do
     # Logger.info("CHOICE BLOCK: #{inspect(choice_block)}")
     choice_vars(choice_block)
   end
 
-  defp vars({:__block__, [], block}) do
+  defp vars({:__block__, _metadata, block}) do
     vars(block) |> List.flatten()
   end
 
@@ -704,7 +699,7 @@ defmodule Core do
     # Logger.info("Flatting pipe terms...")
     ts = case t2 do
       [] -> []
-      [{:|, [], terms}] -> flat_pipe_terms(terms)
+      [{:|, _metadata, terms}] -> flat_pipe_terms(terms)
       _ -> t2
     end
     [t1, ts]
@@ -729,13 +724,13 @@ defmodule Core do
   defp choice_goals(delta, [{:do, do_block}, {:else, else_block} | rest]) do
     do_block_list =
       case do_block do
-        {:__block__, [], do_list} -> do_list
+        {:__block__, _metadata, do_list} -> do_list
         _ -> [do_block]
       end
 
     else_block_list =
       case else_block do
-        {:__block__, [], else_list} -> else_list
+        {:__block__, _metadata, else_list} -> else_list
         _ -> [else_block]
       end
 
@@ -749,7 +744,7 @@ defmodule Core do
             rest
             |> Enum.map(fn {:else, extra_else_block} ->
               case extra_else_block do
-                {:__block__, [], else_list} -> else_list
+                {:__block__, _metadata, else_list} -> else_list
                 _ -> [extra_else_block]
               end
             end)

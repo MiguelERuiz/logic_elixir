@@ -111,39 +111,40 @@ defmodule CoreTest do
     assert pred16({:ground, 5}).(%{}) |> Enum.into([]) == []
   end
 
-  # TODO prepare test for pred17*
+  test "Checks append" do
+    assert append({:ground, []}, {:ground, [1]}, {:var, "X"}).(%{}) |> Enum.into([]) == [%{"X" => {:ground, [1]}}]
+    assert append({:ground, [1]}, {:ground, []}, {:var, "X"}).(%{}) |> Enum.into([]) == [%{"X" => {:ground, [1]}}]
+  end
 
-  # TODO prepare test for append
+  test "Checks pred17" do
+    assert pred17({:var, "X"}, {:var, "Y"}).(%{}) |> Enum.into([]) == [%{"X" => {:ground, 1}, "Y" => {:ground, 2}}]
+    assert pred17({:ground, 1}, {:var, "Y"}).(%{}) |> Enum.into([]) == [%{"Y" => {:ground, 2}}]
+    assert pred17({:var, "X"}, {:ground, 2}).(%{}) |> Enum.into([]) == [%{"X" => {:ground, 1}}]
+    assert pred17({:ground, 1}, {:ground, 2}).(%{}) |> Enum.into([]) == [%{}]
+    assert pred17({:ground, 2}, {:var, "Y"}).(%{}) |> Enum.into([]) == []
+    assert pred17({:var, "X"}, {:ground, 3}).(%{}) |> Enum.into([]) == []
+  end
 
   test "Checks pred18" do
-    assert pred18({:var, "X"}, {:var, "Y"}).(%{}) |> Enum.into([]) == [%{"X" => {:ground, 1}, "Y" => {:ground, 2}}]
-    assert pred18({:ground, 1}, {:var, "Y"}).(%{}) |> Enum.into([]) == [%{"Y" => {:ground, 2}}]
-    assert pred18({:var, "X"}, {:ground, 2}).(%{}) |> Enum.into([]) == [%{"X" => {:ground, 1}}]
+    assert pred18({:var, "X"}, {:var, "Y"}).(%{}) |> Enum.into([]) == [%{}]
     assert pred18({:ground, 1}, {:ground, 2}).(%{}) |> Enum.into([]) == [%{}]
-    assert pred18({:ground, 2}, {:var, "Y"}).(%{}) |> Enum.into([]) == []
-    assert pred18({:var, "X"}, {:ground, 3}).(%{}) |> Enum.into([]) == []
+    assert pred18({:ground, 1}, {:ground, 1}).(%{}) |> Enum.into([]) == [%{}]
   end
 
   test "Checks pred19" do
-    assert pred19({:var, "X"}, {:var, "Y"}).(%{}) |> Enum.into([]) == [%{}]
-    assert pred19({:ground, 1}, {:ground, 2}).(%{}) |> Enum.into([]) == [%{}]
-    assert pred19({:ground, 1}, {:ground, 1}).(%{}) |> Enum.into([]) == [%{}]
+    assert pred19({:var, "X"}, {:var, "Y"}).(%{}) |> Enum.into([]) == [%{"X" => {:ground, 1}, "Y" => {:ground, 3}}, %{"X" => {:ground, 2}, "Y" => {:ground, 4}}]
+    assert pred19({:ground, 1}, {:var, "Y"}).(%{}) |> Enum.into([]) == [%{"Y" => {:ground, 3}}]
+    assert pred19({:ground, 2}, {:var, "Y"}).(%{}) |> Enum.into([]) == [%{"Y" => {:ground, 4}}]
+    assert pred19({:var, "X"}, {:ground, 3}).(%{}) |> Enum.into([]) == [%{"X" => {:ground, 1}}]
+    assert pred19({:var, "X"}, {:ground, 4}).(%{}) |> Enum.into([]) == [%{"X" => {:ground, 2}}]
+    assert pred19({:ground, 1}, {:ground, 3}).(%{}) |> Enum.into([]) == [%{}]
+    assert pred19({:ground, 2}, {:ground, 4}).(%{}) |> Enum.into([]) == [%{}]
+    assert pred19({:ground, 7}, {:ground, 8}).(%{}) |> Enum.into([]) == []
   end
 
   test "Checks pred20" do
-    assert pred20({:var, "X"}, {:var, "Y"}).(%{}) |> Enum.into([]) == [%{"X" => {:ground, 1}, "Y" => {:ground, 3}}, %{"X" => {:ground, 2}, "Y" => {:ground, 4}}]
-    assert pred20({:ground, 1}, {:var, "Y"}).(%{}) |> Enum.into([]) == [%{"Y" => {:ground, 3}}]
-    assert pred20({:ground, 2}, {:var, "Y"}).(%{}) |> Enum.into([]) == [%{"Y" => {:ground, 4}}]
-    assert pred20({:var, "X"}, {:ground, 3}).(%{}) |> Enum.into([]) == [%{"X" => {:ground, 1}}]
-    assert pred20({:var, "X"}, {:ground, 4}).(%{}) |> Enum.into([]) == [%{"X" => {:ground, 2}}]
-    assert pred20({:ground, 1}, {:ground, 3}).(%{}) |> Enum.into([]) == [%{}]
-    assert pred20({:ground, 2}, {:ground, 4}).(%{}) |> Enum.into([]) == [%{}]
-    assert pred20({:ground, 7}, {:ground, 8}).(%{}) |> Enum.into([]) == []
-  end
-
-  test "Checks pred21" do
-    assert pred21({:var, "X"}).(%{}) |> Enum.into([]) != []
-    assert pred21({:ground, {1, 2}}).(%{}) |> Enum.into([]) == [%{}]
+    assert pred20({:var, "X"}).(%{}) |> Enum.into([]) != []
+    assert pred20({:ground, {1, 2}}).(%{}) |> Enum.into([]) == [%{}]
   end
 
   test "Checks pred23" do
