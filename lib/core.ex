@@ -20,8 +20,15 @@ defmodule Core do
   # Macros #
   ##########
 
-  defmacro __before_compile__(_env) do
-    VarBuilder.start_link()
+  # defmacro __before_compile__(_env) do
+  #   VarBuilder.start_link()
+  # end
+
+  defmacro __using__(_params) do
+    quote do
+      import Core
+      # @before_compile Core
+    end
   end
 
   defmacro defcore(pred_name, [do: do_block]) do
@@ -90,8 +97,8 @@ defmodule Core do
 
     quote do
       def unquote({predicate_name, [], t_list}) do
-        unquote({:__block__, [], x_list |> Enum.map(fn x -> (quote do: unquote(x) = unquote(VarBuilder.gen_var())) end)}) # Replace unquote(VarBuilder.gen_var) with VarBuilder.gen_var
-        unquote({:__block__, [], y_list |> Enum.map(fn y -> (quote do: unquote(y) = unquote(VarBuilder.gen_var())) end)}) # Replace unquote(VarBuilder.gen_var) with VarBuilder.gen_var
+        unquote({:__block__, [], x_list |> Enum.map(fn x -> (quote do: unquote(x) = VarBuilder.gen_var()) end)})
+        unquote({:__block__, [], y_list |> Enum.map(fn y -> (quote do: unquote(y) = VarBuilder.gen_var()) end)})
 
         fn th1 ->
           th2 = Map.merge(th1, Map.new(unquote(Enum.zip(x_list, t_list))))
@@ -368,7 +375,8 @@ defmodule Core do
   end
 
   # TODO fix the code to pass this function
-  def p10 do
+
+  def pappend do
     quote do
       defcore append(Xs, Ys, Zs) do
         choice do
@@ -598,7 +606,7 @@ defmodule Core do
     end
   end
 
-  def p32 do
+  def pordered do
     quote do
       defcore is_ordered(Xs) do
         choice do
@@ -633,7 +641,7 @@ defmodule Core do
 
   def p33 do
     quote do
-      defcore pred33(X, Y, Z, T) do
+      defcore pred33(X) do
         X = [Y | [Z | [T]]]
       end
     end
@@ -646,7 +654,7 @@ defmodule Core do
   defp vars(goals) when is_list(goals) do
     # Logger.info("GOALS: #{inspect(goals)}")
     vars_goals = goals
-        |> Enum.map(fn goal -> vars(goal) end)
+        |> Enum.map(fn goal -> vars_in_goal(goal) end)
     # Logger.info("VARS IN GOALS: #{inspect(vars_goals)}")
     logic_vars = vars_goals
         |> :lists.flatten()
@@ -656,14 +664,13 @@ defmodule Core do
     logic_variables =
     logic_vars
     |> Enum.map(fn {:__aliases__, _metadata, [logic_variable]} -> logic_variable
-                   logic_variable -> logic_variable
                 end)
     |> Enum.uniq()
     # Logger.info("LOGIC VARIABLES IN VARS/1: #{inspect(logic_variables)}")
     logic_variables
   end
 
-  defp vars({:=, _metadata, [t1, t2]}) do
+  defp vars_in_goal({:=, _metadata, [t1, t2]}) do
     # Logger.info("= OPERATOR: T1: #{inspect(t1)}  T2: #{inspect(t2)}")
     terms1 = flat_terms(t1)
     # Logger.info("FLAT TERMS of T1: #{inspect(terms1)}")
@@ -672,28 +679,29 @@ defmodule Core do
     [terms1, terms2]
   end
 
-  defp vars({:choice, _metadata, [choice_block]}) do
+  defp vars_in_goal({:choice, _metadata, [choice_block]}) do
     # Logger.info("CHOICE BLOCK: #{inspect(choice_block)}")
     choice_vars(choice_block)
   end
 
-  defp vars({:__block__, _metadata, block}) do
-    vars(block) |> List.flatten()
+  defp vars_in_goal({:__block__, _metadata, block}) do
+    block |> Enum.map(fn goal -> vars_in_goal(goal) end)
   end
 
-  defp vars({:@, _metadata, at_arguments}), do: flat_terms(at_arguments)
+  defp vars_in_goal({:@, _metadata, at_arguments}), do: flat_at_terms(at_arguments)
 
-  defp vars({_predicate_name, _metadata, arguments}), do: flat_terms(arguments)
+  defp vars_in_goal({_predicate_name, _metadata, arguments}), do: flat_terms(arguments)
 
-  defp vars(_) do
-    []
-  end
+  defp vars_in_goal(_), do: []
 
   defp flat_terms({:__aliases__, _metadata, [logic_variable]} = term) when is_atom(logic_variable), do: term
   defp flat_terms(terms) when is_tuple(terms), do: Tuple.to_list(terms)
   defp flat_terms([{:|, _metadata, terms}]), do: flat_pipe_terms(terms)
-  defp flat_terms(terms) when is_list(terms), do: terms
   defp flat_terms(terms), do: terms
+
+  defp flat_at_terms([{:___aliases__, _metadata, [logic_variable]} = term]) when is_atom(logic_variable), do: term
+  defp flat_at_terms([{_operator, _metadata, op_arguments}]), do: op_arguments
+  defp flat_at_terms(_), do: []
 
   defp flat_pipe_terms([t1, t2]) do
     # Logger.info("Flatting pipe terms...")
@@ -706,15 +714,15 @@ defmodule Core do
   end
 
   defp choice_vars([{:do, do_block}, {:else, else_block} | rest]) do
-    do_block_vars = vars(do_block)
-    else_block_vars = vars(else_block)
+    do_block_vars = vars_in_goal(do_block)
+    else_block_vars = vars_in_goal(else_block)
     result = case rest do
       [] -> [do_block_vars, else_block_vars]
       _ ->
         rest_block_vars =
           rest
           |> Enum.map(fn {:else, extra_else_block} ->
-            vars(extra_else_block)
+            vars_in_goal(extra_else_block)
           end)
         [do_block_vars, else_block_vars, rest_block_vars]
     end
@@ -761,10 +769,10 @@ defmodule Core do
        when is_atom(logic_variable),
        do: true
 
-  defp is_logic_variable?(term) when is_atom(term) do
-    string_term = Atom.to_string(term)
-    string_term == String.upcase(string_term)
-  end
+  # defp is_logic_variable?(term) when is_atom(term) do
+  #   string_term = Atom.to_string(term)
+  #   string_term == String.upcase(string_term)
+  # end
 
   defp is_logic_variable?(_), do: false
 end

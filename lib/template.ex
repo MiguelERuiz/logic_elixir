@@ -1,5 +1,5 @@
 defmodule Template do
-  import Core
+  use Core
 
   defcore pred1(X) do
     X = 5
@@ -33,11 +33,19 @@ defmodule Template do
 
   defcore pred7(X) do
     choice do
-      X = 1
-    else
-      X = 2
-    else
       X = 3
+    else
+      X = 4
+    else
+      X = 5
+    end
+  end
+
+  defcore pred71(X) do
+    choice do
+      pred6(X)
+    else
+      pred7(X)
     end
   end
 
@@ -92,17 +100,6 @@ defmodule Template do
     Z = f(X, Y)
   end
 
-  defcore append(Xs, Ys, Zs) do
-    choice do
-      Xs = []
-      Ys = Zs
-    else
-      Xs = [X | XX]
-      Zs = [X | ZZ]
-      append(XX, Ys, ZZ)
-    end
-  end
-
   defcore pred17(X, Y) do
     {X, Y} = {1, 2}
   end
@@ -132,81 +129,119 @@ defmodule Template do
     Xs = [2 | 4]
   end
 
-  defcore pred210(Xs) do
+  defcore pred22(Xs) do
     Xs = [2 | []]
   end
 
-  defcore pred211(Xs) do
+  defcore pred23(Xs) do
     Xs = [2 | [4]]
   end
 
-  defcore pred212(Xs) do
+  defcore pred24(Xs) do
     Xs = [2 | [4 | [6]]]
   end
 
-  defcore pred23(X) do
-    X = {1, 2, 3}
+  defcore pred25(Xs, Ys) do
+    [Xs | Ys] = [1 | []]
   end
 
-  defcore pred24(X, Y, Z) do
-    [X, Y, Z] = [1, 2, 3]
-  end
-
-  defcore pred25() do
-    [X, Y, Z] = [1, 2, 3]
-  end
-
-  defcore pred26() do
-    [X, Y, Z, T] = [1, 2, 3]
+  defcore pred26(Xs, Ys, Zs) do
+    [Xs | [Ys | [Zs]]] = [1, 2, 3]
   end
 
   defcore pred27(X) do
-    X = [[1, 2, 3]]
+    X = {1, 2, 3}
   end
 
-  defcore pred28(X) do
-    @(X >= 2)
+  defcore pred28(X, Y, Z) do
+    [X, Y, Z] = [1, 2, 3]
   end
 
   defcore pred29() do
+    [X, Y, Z] = [1, 2, 3]
+  end
+
+  defcore pred30() do
+    [X, Y, Z, T] = [1, 2, 3]
+  end
+
+  defcore pred31(X) do
+    X = [[1, 2, 3]]
+  end
+
+  defcore pred32(X) do
+    @(X >= 2)
+  end
+
+  defcore pred33() do
     X = 3
     @(X > 2)
   end
 
-  defcore pred30(X) do
+  defcore pred34(X) do
     X = [1 | []]
   end
 
-  defcore pred31(X) do
+  defcore pred35(X) do
     X = [1 | [2 | []]]
   end
 
-  defcore pred32(X, Y) do
+  defcore pred36(X, Y) do
     X = 1
     Y = [X | [2 | [3 | []]]]
   end
 
-  defcore pred33(X) do
+  defcore pred37(X) do
     X = [Y | [Z | [T]]]
   end
 
-  defcore pred34(X, Y, Z, T) do
+  defcore pred38(X, Y, Z, T) do
     X = [Y | [Z | [T]]]
   end
 
-  # (CompileError) invalid call groundify(th, {:var, nil})
-  # defcore is_ordered(Xs) do
-  #   choice do
-  #     Xs = []
-  #   else
-  #     Xs = [X | []]
-  #   else
-  #     Xs = [X | [Y | [Ys]]]
-  #     @(X <= Y)
-  #     is_ordered([Y | [Ys]])
-  #   end
-  # end
+  defcore pred39(Xs) do
+    Xs = [X | []]
+  end
 
-  # (CompileError) invalid call groundify(th, {:var, x3})
+  defcore pred40(Xs) do
+    Xs = [X | [Y]]
+  end
+
+  defcore pred41() do
+    [1, 2] = [X]
+  end
+
+  defcore pred42(X) do
+    choice do
+      X = [Y | [Z]]
+    else
+      X = [Z | [Y]]
+    else
+      X = [Z | [Y | [T]]]
+    end
+  end
+
+  defcore is_ordered(Xs) do
+    choice do
+      Xs = []
+    else
+      Xs = [X | []]
+    else
+      Xs = [X | [Y | [Ys]]]
+      @(X <= Y)
+      is_ordered([Y | [Ys]])
+    end
+  end
+
+  defcore append(Xs, Ys, Zs) do
+    choice do
+      Xs = []
+      Ys = Zs
+    else
+      Xs = [X | XX]
+      Zs = [X | ZZ]
+      append(XX, Ys, ZZ)
+    end
+  end
 
 end

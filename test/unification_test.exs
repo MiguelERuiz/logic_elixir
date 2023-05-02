@@ -102,8 +102,20 @@ defmodule UnificationTest do
            ) == %{"Y" => {:ground, {5, 3}}, "X" => {:ground, 5}, "Z" => {:ground, :a}}
 
     assert unify(
-      [{:ground, 3} | {:var, "Y"}], {:ground, [3 | []]}, %{}
-    ) == %{"Y" => {:ground, []}}
+      [{:ground, 1} | {:var, "T"}], {:ground, [1]}, %{}
+    ) == %{"T" => {:ground, []}}
+
+    assert unify(
+      [{:ground, 1} | {:var, "T"}], {:ground, [1, 2]}, %{}
+    ) == %{"T" => {:ground, [2]}}
+
+    assert unify(
+      [{:ground, 1} | [{:var, "T"} | {:var, "X"}]], {:ground, [1, 2]}, %{}
+    ) == %{"T" => {:ground, 2}, "X" => {:ground, []}}
+
+    assert unify(
+      [{:ground, 1} | [{:var, "T"} | {:var, "X"}]], {:ground, [1, 2, 3]}, %{}
+    ) == %{"T" => {:ground, 2}, "X" => {:ground, [3]}}
   end
 
   test "Verifies [Clash] rule" do
