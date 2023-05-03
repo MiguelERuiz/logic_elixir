@@ -102,8 +102,12 @@ defmodule UnificationTest do
            ) == %{"Y" => {:ground, {5, 3}}, "X" => {:ground, 5}, "Z" => {:ground, :a}}
 
     assert unify(
-      [{:ground, 1} | {:var, "T"}], {:ground, [1]}, %{}
+      [{:ground, 1} | [{:var, "T"}]], {:ground, [1]}, %{}
     ) == %{"T" => {:ground, []}}
+
+    assert unify(
+      [{:ground, 1} | [{:var, "T"}]], {:ground, [1, 2]}, %{}
+    ) == %{"T" => {:ground, 2}}
 
     assert unify(
       [{:ground, 1} | {:var, "T"}], {:ground, [1, 2]}, %{}
@@ -122,5 +126,8 @@ defmodule UnificationTest do
     assert unify(:a, 3, %{}) == :unmatch
     assert unify(:a, :a, %{}) == :unmatch
     assert unify({{:var, "X"}, {:var, "Y"}}, {:ground, 3}, %{}) == :unmatch
+    assert unify(
+      [{:ground, 1} | [{:var, "T"}]], {:ground, []}, %{}
+    ) == :unmatch
   end
 end

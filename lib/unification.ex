@@ -75,9 +75,14 @@ defmodule Unification do
   def unify([], [], theta), do: theta
 
   # # This does not seem to be the best solution
-  # def unify([{:var, x}], [], theta), do: unify({:var, x}, [], theta)
+  def unify([{:var, x} | rest], [], theta) do
+    case unify({:var, x}, [], theta) do
+      :unmatch -> :unmatch
+      theta1 -> unify(rest, [], theta1)
+    end
+  end
 
-  # def unify([], [{:var, x}], theta), do: unify({:var, x}, [], theta)
+  def unify([], [{:var, x} | rest], theta), do: unify([{:var, x} | rest], [], theta)
   # # End this does not seem to be the best solution
 
   def unify([h1 | t1], [h2 | t2], theta) do
@@ -94,12 +99,12 @@ defmodule Unification do
     # Logger.info("c1: #{inspect(c1)}")
     c2 = components_of_list(t2)
     # This is the main cause lists are not working properly
-    # case length(c1) == length(c2) do
-    #   false -> :unmatch
-    #   true -> unify(c1, c2, theta)
-    # end
+    case length(c1) == length(c2) do
+      false -> :unmatch
+      true -> unify(c1, c2, theta)
+    end
     # End This is the main cause lists are not working properly
-    unify(c1, c2, theta)
+    # unify(c1, c2, theta)
   end
 
   # [Clash] Rule
