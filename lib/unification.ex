@@ -74,17 +74,6 @@ defmodule Unification do
   # [List] Rule
   def unify([], [], theta), do: theta
 
-  # # This does not seem to be the best solution
-  def unify([{:var, x} | rest], [], theta) do
-    case unify({:var, x}, [], theta) do
-      :unmatch -> :unmatch
-      theta1 -> unify(rest, [], theta1)
-    end
-  end
-
-  def unify([], [{:var, x} | rest], theta), do: unify([{:var, x} | rest], [], theta)
-  # # End this does not seem to be the best solution
-
   def unify([h1 | t1], [h2 | t2], theta) do
     case unify(h1, h2, theta) do
       :unmatch -> :unmatch
@@ -95,10 +84,11 @@ defmodule Unification do
   def unify(t1, t2, theta) when is_list_term(t1) and is_list_term(t2) do
     c1 = components_of_list(t1)
     c2 = components_of_list(t2)
+
     case {c1, c2} do
       {[], [_|_]} -> :unmatch
       {[_|_], []} -> :unmatch
-      {c1, c2} -> unify(c1, c2, theta)
+      _ -> unify(c1, c2, theta)
     end
   end
 
