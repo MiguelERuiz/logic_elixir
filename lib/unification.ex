@@ -93,18 +93,13 @@ defmodule Unification do
   end
 
   def unify(t1, t2, theta) when is_list_term(t1) and is_list_term(t2) do
-    # Logger.info("t1: #{inspect(t1)}")
-    # Logger.info("t2: #{inspect(t2)}")
     c1 = components_of_list(t1)
-    # Logger.info("c1: #{inspect(c1)}")
     c2 = components_of_list(t2)
-    # This is the main cause lists are not working properly
-    case length(c1) == length(c2) do
-      false -> :unmatch
-      true -> unify(c1, c2, theta)
+    case {c1, c2} do
+      {[], [_|_]} -> :unmatch
+      {[_|_], []} -> :unmatch
+      {c1, c2} -> unify(c1, c2, theta)
     end
-    # End This is the main cause lists are not working properly
-    # unify(c1, c2, theta)
   end
 
   # [Clash] Rule
