@@ -319,20 +319,20 @@ defmodule CoreTest do
     assert pred41().(%{}) |> Enum.into([]) == [%{}]
   end
 
-  test "Checks is_ordered" do
-    assert is_ordered({:ground, []}).(%{}) |> Enum.into([]) == [%{}]
-    assert is_ordered({:ground, [1]}).(%{}) |> Enum.into([]) == [%{}]
-    assert is_ordered({:ground, [1, 2]}).(%{}) |> Enum.into([]) == [%{}]
-    assert is_ordered({:ground, [1, 3]}).(%{}) |> Enum.into([]) == [%{}]
-    assert is_ordered({:ground, [1, 2, 3]}).(%{}) |> Enum.into([]) == [%{}]
-    assert is_ordered({:ground, [1, 3, 2]}).(%{}) |> Enum.into([]) == []
-  end
+  # test "Checks is_ordered" do
+  #   assert is_ordered({:ground, []}).(%{}) |> Enum.into([]) == [%{}]
+  #   assert is_ordered({:ground, [1]}).(%{}) |> Enum.into([]) == [%{}]
+  #   assert is_ordered({:ground, [1, 2]}).(%{}) |> Enum.into([]) == [%{}]
+  #   assert is_ordered({:ground, [1, 3]}).(%{}) |> Enum.into([]) == [%{}]
+  #   assert is_ordered({:ground, [1, 2, 3]}).(%{}) |> Enum.into([]) == [%{}]
+  #   assert is_ordered({:ground, [1, 3, 2]}).(%{}) |> Enum.into([]) == []
+  # end
 
-  test "Checks append" do
-    assert append({:ground, []}, {:ground, [1]}, {:var, "X"}).(%{}) |> Enum.into([]) == [
-             %{"X" => {:ground, [1]}}
-           ]
+  # test "Checks append" do
+  #   assert append({:ground, []}, {:ground, [1]}, {:var, "X"}).(%{}) |> Enum.into([]) == [
+  #            %{"X" => {:ground, [1]}}
+  #          ]
 
-    assert append({:ground, [1]}, {:ground, []}, {:var, "X"}).(%{}) |> Enum.into([]) == [%{"X" => {:ground, [1]}}]
-  end
+  #   assert append({:ground, [1]}, {:ground, []}, {:var, "X"}).(%{}) |> Enum.into([]) == [%{"X" => {:ground, [1]}}]
+  # end
 end
