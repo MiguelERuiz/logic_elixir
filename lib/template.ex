@@ -196,6 +196,8 @@ defmodule Template do
 
   defcore pred40(X) do
     choice do
+      X = []
+    else
       X = [Y | []]
     else
       X = [Y | [Z]]
@@ -204,8 +206,42 @@ defmodule Template do
     end
   end
 
+  defcore pred401(X) do
+    choice do
+      X = []
+    else
+      X = [Y | []]
+    else
+      X = [Y | [Z]]
+    else
+      X = [Y | [Z | T]]
+    end
+  end
+
   defcore pred41() do
     1 = 1
+  end
+
+  defcore pred42(X) do
+    X = []
+  end
+
+  defcore pred43(X) do
+    choice do
+      X = 1
+    else
+      X = 2
+    else
+      X = 3
+    else
+      X = 4
+    else
+      X = 5
+    end
+  end
+
+  defcore pred44(X, Y, Z, T) do
+    X = [Y | [Z | T]]
   end
 
   defcore is_ordered(Xs) do

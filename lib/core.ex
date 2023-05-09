@@ -32,7 +32,6 @@ defmodule Core do
   end
 
   defmacro defcore(pred_name, [do: do_block]) do
-    # Logger.info("pred_name: #{inspect(pred_name)}")
     result = tr_def(pred_name, do_block)
     Macro.to_string(result) |> IO.puts()
     inspect(result, limit: :infinity)
@@ -42,6 +41,9 @@ defmodule Core do
   #############
   # Functions #
   #############
+
+  # DEBUG code, delete when defcore macro works as expected
+  def trace_defcore(ast), do: ast |> tr_def |> Macro.to_string |> IO.puts
 
   # TODO delete this code when defcore macro works as expected
   def tr_def({:defcore, _metadata, [predicate_name_node, [do: do_block]]}) do
@@ -139,11 +141,12 @@ defmodule Core do
 
   def tr_goal(delta, {:choice, _metadata, [choice_block]}) do
     th = Macro.unique_var(:th, __MODULE__)
-    goals = choice_goals(delta, choice_block)
-
     quote do
       fn unquote(th) ->
-        unquote(goals) |> Stream.flat_map(fn f -> f.(unquote(th)) end)
+        unquote(choice_block |> Enum.map(fn {_choice_op, {:__block__, _metadata, goal}} -> tr_goals(delta, goal)
+                                            {_choice_op, goal} -> tr_goals(delta, [goal])
+                                         end))
+        |> Stream.flat_map(fn f -> f.(unquote(th)) end)
       end
     end
   end
@@ -269,7 +272,6 @@ defmodule Core do
     [groundify(theta, t1) | groundify(theta, t2)]
   end
 
-
   #####################
   # Private Functions #
   #####################
@@ -350,42 +352,6 @@ defmodule Core do
         [do_block_vars, else_block_vars, rest_block_vars]
     end
     result
-  end
-
-  defp choice_goals(delta, [{:do, do_block}, {:else, else_block} | rest]) do
-    do_block_list =
-      case do_block do
-        {:__block__, _metadata, do_list} -> do_list
-        _ -> [do_block]
-      end
-
-    else_block_list =
-      case else_block do
-        {:__block__, _metadata, else_list} -> else_list
-        _ -> [else_block]
-      end
-
-    goals =
-      case rest do
-        [] ->
-          [do_block_list, else_block_list]
-
-        _ ->
-          rest_list =
-            rest
-            |> Enum.map(fn {:else, extra_else_block} ->
-              case extra_else_block do
-                {:__block__, _metadata, else_list} -> else_list
-                _ -> [extra_else_block]
-              end
-            end)
-            |> :lists.flatten()
-
-          [do_block_list, else_block_list, rest_list]
-      end
-
-    goals
-    |> Enum.map(fn goals -> tr_goals(delta, goals) end)
   end
 
   defp is_logic_variable?({:__aliases__, _metadata, [logic_variable]})

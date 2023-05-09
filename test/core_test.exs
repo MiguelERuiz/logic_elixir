@@ -305,6 +305,7 @@ defmodule CoreTest do
 
   test "Checks pred40" do
     assert pred40({:var, "X"}).(%{}) |> Enum.into([]) != []
+    assert pred40({:ground, []}).(%{}) |> Enum.into([]) == [%{}]
     assert pred40({:ground, [1]}).(%{}) |> Enum.into([]) == [%{}]
     assert pred40({:ground, [1, 2]}).(%{}) |> Enum.into([]) == [%{}]
     assert pred40({:ground, [1, 2, 3]}).(%{}) |> Enum.into([]) == [%{}]
@@ -312,7 +313,6 @@ defmodule CoreTest do
     assert pred40([{:var, "X"}, {:var, "Y"}]).(%{}) |> Enum.into([]) != []
     assert pred40([{:var, "X"}, {:var, "X"}]).(%{}) |> Enum.into([]) != []
     assert pred40([{:var, "X"}, {:ground, 2}]).(%{}) |> Enum.into([]) != []
-    assert pred40({:ground, []}).(%{}) |> Enum.into([]) == []
   end
 
   test "Checks pred41" do
