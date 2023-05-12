@@ -3,6 +3,8 @@ defmodule Unification do
     Documentation for Unification module
   """
   require Logger
+  require IEx
+
 
   #########
   # Types #
@@ -124,8 +126,14 @@ defmodule Unification do
   end
 
   @spec apply_subtitutions(%{String.t() => t()}) :: %{String.t() => t()}
-  defp apply_subtitutions(theta),
-    do: :maps.map(fn _, v -> apply_subtitution(theta, v) end, theta)
+  defp apply_subtitutions(theta) do
+    # Logger.info("apply_subtitutions, where true magic ends")
+    # Logger.info("theta: #{inspect(theta)}")
+    :maps.map(fn k, v ->
+      # Logger.info("k: #{inspect(k)}")
+      # Logger.info("v: #{inspect(v)}")
+      apply_subtitution(theta, v) end, theta)
+  end
 
   @spec apply_subtitution(%{String.t() => t()}, t()) :: t()
   defp apply_subtitution(theta, {:var, x}) when belongs_to(theta, x), do: theta[x]
@@ -142,17 +150,48 @@ defmodule Unification do
     end
   end
 
-  defp apply_subtitution(theta, t) when is_list(t) do
-    all_grounds(Enum.map(t, &apply_subtitution(theta, &1)))
+  # This code still does not work as expected
+  defp apply_subtitution(theta, t) when is_list_term(t) do
+    all_grounds(apply_subtitution(theta, t))
   end
+
+  @spec apply_subtitution(%{String.t() => t()}, [t()]) :: [t()]
+  # defp apply_subtitution(_theta, [], acc), do: acc
+
+  defp apply_subtitution(theta, [h|t]) do
+    h_result = apply_subtitution(theta, h)
+    t_result = apply_subtitution(theta, t)
+    Core.build_list(h_result, t_result)
+  end
+  # defp apply_subtitution(theta, t) when is_list_term(t) do
+  #   # Logger.warn("t: #{inspect(t)}")
+  #   # IEx.pry
+  #   if is_list(t) do
+  #     IEx.pry
+  #   end
+  #   something = Enum.map(t, fn x ->
+  #     # Logger.info("apply_subtitution inside a Enum.map")
+  #     # Logger.info("x: #{inspect(x)}")
+  #     # Logger.info("theta: #{inspect(theta)}")
+  #     apply_subtitution(theta, x)
+  #     end
+  #   )
+  #   # Logger.info("something: #{inspect(something)}")
+  #   all_grounds(something)
+  # end
+  # This code still does not work as expected
+
 
   @spec components_of(tuple()) :: [term()]
   defp components_of({:ground, t}), do: Tuple.to_list(t) |> Enum.map(&{:ground, &1})
   defp components_of(t) when is_tuple(t), do: Tuple.to_list(t)
 
-  @spec components_of_list(list() | ground_term()) :: [term()]
-  defp components_of_list({:ground, t}), do: t |> Enum.map(&{:ground, &1})
-  defp components_of_list(t) when is_list(t), do: t
+  # @spec components_of_list(list() | ground_term()) :: [term()]
+  def components_of_list({:ground, []}), do: []
+  def components_of_list({:ground, [h | t]}), do: [{:ground, h}, {:ground, t}]
+  def components_of_list([h | t]), do: [h, t]
+  # defp components_of_list({:ground, t}), do: t |> Enum.map(&{:ground, &1})
+  # defp components_of_list(t) when is_list(t), do: t
 
   @spec all_grounds([t()]) :: {:ground, [term()]} | [t()]
   defp all_grounds(t) do

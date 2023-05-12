@@ -124,6 +124,18 @@ defmodule UnificationTest do
     assert unify(
       [{:var, "X"} | [{:var, "Y"} | {:var, "Z"}]], {:ground, [1, 2, 3]}, %{}
     ) == %{"X" => {:ground, 1}, "Y" => {:ground, 2}, "Z" => {:ground, [3]}}
+
+    assert unify(
+      [{:var, "X"}], [{:var, "Y"} | {:var, "Z"}], %{}
+    ) == %{"X" => {:var, "Y"}, "Z" => {:ground, []}}
+
+    assert unify(
+      {:var, "X"}, [{:var, "Y"} | {:var, "Z"}], %{}
+    ) == %{"X" => [{:var, "Y"} | {:var, "Z"}]}
+
+    assert unify(
+      {:var, "Xs"}, [{:var, "X"} | [{:var, "Y"} | {:var, "Ys"}]], %{}
+    ) == %{"Xs" => [{:var, "X"} | [{:var, "Y"} | {:var, "Ys"}]]}
   end
 
   test "Verifies [Clash] rule" do
@@ -148,5 +160,12 @@ defmodule UnificationTest do
     assert unify(
       [{:ground, 1} | [{:var, "T"}]], {:ground, [1]}, %{}
     ) == :unmatch
+
+    assert unify(
+      [{:var, "Xs"}], [{:var, "X"} | [{:var, "Y"} | {:var, "Ys"}]], %{}
+    ) == :unmatch
+
+    assert unify(
+      [{:var, "Xs"}], {:ground, []}, %{}) == :unmatch
   end
 end
