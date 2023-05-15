@@ -1,5 +1,5 @@
 defmodule CoreTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case #, async: true
   doctest Core
 
   import Template
@@ -319,20 +319,44 @@ defmodule CoreTest do
     assert pred41().(%{}) |> Enum.into([]) == [%{}]
   end
 
-  # test "Checks is_ordered" do
-  #   assert is_ordered({:ground, []}).(%{}) |> Enum.into([]) == [%{}]
-  #   assert is_ordered({:ground, [1]}).(%{}) |> Enum.into([]) == [%{}]
-  #   assert is_ordered({:ground, [1, 2]}).(%{}) |> Enum.into([]) == [%{}]
-  #   assert is_ordered({:ground, [1, 3]}).(%{}) |> Enum.into([]) == [%{}]
-  #   assert is_ordered({:ground, [1, 2, 3]}).(%{}) |> Enum.into([]) == [%{}]
-  #   assert is_ordered({:ground, [1, 3, 2]}).(%{}) |> Enum.into([]) == []
-  # end
+  test "Checks pred42" do
+    assert pred42({:ground, []}).(%{}) |> Enum.into([]) == [%{}]
+    assert pred42({:var, "X"}).(%{}) |> Enum.into([]) == [%{"X" => {:ground, []}}]
+    assert pred42({:ground, [1]}).(%{}) |> Enum.into([]) == []
+    assert pred42({:ground, 1}).(%{}) |> Enum.into([]) == []
+  end
 
-  # test "Checks append" do
-  #   assert append({:ground, []}, {:ground, [1]}, {:var, "X"}).(%{}) |> Enum.into([]) == [
-  #            %{"X" => {:ground, [1]}}
-  #          ]
+  test "Checks pred43" do
+    assert pred43({:var, "X"}).(%{}) |> Enum.into([]) == [
+      %{"X" => {:ground, 1}},
+      %{"X" => {:ground, 2}},
+      %{"X" => {:ground, 3}},
+      %{"X" => {:ground, 4}},
+      %{"X" => {:ground, 5}}
+    ]
+    assert pred43({:ground, 1}).(%{}) |> Enum.into([]) == [%{}]
+    assert pred43({:ground, 2}).(%{}) |> Enum.into([]) == [%{}]
+    assert pred43({:ground, 3}).(%{}) |> Enum.into([]) == [%{}]
+    assert pred43({:ground, 4}).(%{}) |> Enum.into([]) == [%{}]
+    assert pred43({:ground, 5}).(%{}) |> Enum.into([]) == [%{}]
+    assert pred43({:ground, 6}).(%{}) |> Enum.into([]) == []
+  end
 
-  #   assert append({:ground, [1]}, {:ground, []}, {:var, "X"}).(%{}) |> Enum.into([]) == [%{"X" => {:ground, [1]}}]
-  # end
+  test "Checks is_ordered" do
+    assert is_ordered({:ground, []}).(%{}) |> Enum.into([]) == [%{}]
+    assert is_ordered({:ground, [1]}).(%{}) |> Enum.into([]) == [%{}]
+    assert is_ordered({:ground, [1, 2]}).(%{}) |> Enum.into([]) == [%{}]
+    assert is_ordered({:ground, [1, 3]}).(%{}) |> Enum.into([]) == [%{}]
+    assert is_ordered({:ground, [1, 2, 3]}).(%{}) |> Enum.into([]) == [%{}]
+    assert is_ordered({:ground, [1, 3, 2]}).(%{}) |> Enum.into([]) == []
+    assert is_ordered({:ground, 1..100 |> Enum.to_list}).(%{}) |> Enum.into([]) == [%{}]
+  end
+
+  test "Checks append" do
+    assert append({:ground, []}, {:ground, [1]}, {:var, "X"}).(%{}) |> Enum.into([]) == [
+             %{"X" => {:ground, [1]}}
+           ]
+
+    # assert append({:ground, [1]}, {:ground, []}, {:var, "X"}).(%{}) |> Enum.into([]) == [%{"X" => {:ground, [1]}}]
+  end
 end

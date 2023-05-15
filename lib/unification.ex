@@ -52,17 +52,24 @@ defmodule Unification do
 
   # [Var2] and [Occurs-check] Rules
   def unify({:var, x}, t, theta) when not belongs_to(theta, x) do
+    # Logger.warn "[Var2] and [Occurs-check]"
+    # Logger.info "{:var, x}: #{inspect({:var, x})}"
+    # Logger.info "t: #{inspect(t)}"
+    # Logger.info "theta: #{inspect(theta)}"
+    # Logger.info "vars(theta, t): #{inspect(vars(theta, t))}"
+    # Logger.info "x in vars(theta, t): #{x in vars(theta, t)}"
     if x in vars(theta, t) do
-      # [Occurs-check]
+      # Logger.warn "[Occurs-check]"
       :unmatch
     else
-      # [Var2]
+      # Logger.warn "[Var2]"
       unify_variable(x, t, theta)
     end
   end
 
   # [Orient] Rule
   def unify(t1, {:var, _x} = t2, theta) do
+    # # Logger.warn("[Orient] rule")
     unify(t2, t1, theta)
   end
 
@@ -112,22 +119,42 @@ defmodule Unification do
   end
 
   defp vars(theta, t) when is_tuple(t) do
+    # Logger.warn "vars/2 when t is tuple"
+    # Logger.info "theta: #{inspect(theta)}"
+    # Logger.info "t: #{inspect(t)}"
     c = components_of(t)
     vars(theta, c)
   end
 
-  defp vars(theta, t) when is_list(t) do
-    Enum.reduce(t, MapSet.new(), fn tx, acc -> MapSet.union(vars(theta, tx), acc) end)
+  # defp vars(theta, t) when is_list(t) do
+  #   # # Logger.warn "vars/2 when is_list(t)"
+  #   # # Logger.info("t: #{inspect(t)}")
+  #   Enum.reduce(t, MapSet.new(), fn tx, acc -> MapSet.union(vars(theta, tx), acc) end)
+  # end
+
+  defp vars(theta, []) do
+    # Logger.warn "vars/2 when t is empty list"
+    MapSet.new(theta)
+  end
+
+  defp vars(theta, [h|t]) do
+    # Logger.warn "vars/2 when t is maybe improper list"
+    theta1 = vars(theta, h)
+    MapSet.union(theta1, vars(theta1, t))
   end
 
   @spec unify_variable(String.t(), t(), %{String.t() => t()}) :: %{String.t() => t()}
   defp unify_variable(x, t, theta) do
+    # Logger.warn "unify_variable/3: Unifying x with t in theta"
+    # Logger.info "x: #{inspect(x)}"
+    # Logger.info "t: #{inspect(t)}"
+    # Logger.info "theta: #{inspect(theta)}"
     apply_subtitutions(Map.put(theta, x, t))
   end
 
   @spec apply_subtitutions(%{String.t() => t()}) :: %{String.t() => t()}
   defp apply_subtitutions(theta) do
-    # Logger.info("apply_subtitutions, where true magic ends")
+    # Logger.warn("apply_subtitutions/1")
     # Logger.info("theta: #{inspect(theta)}")
     :maps.map(fn k, v ->
       # Logger.info("k: #{inspect(k)}")
@@ -136,47 +163,102 @@ defmodule Unification do
   end
 
   @spec apply_subtitution(%{String.t() => t()}, t()) :: t()
-  defp apply_subtitution(theta, {:var, x}) when belongs_to(theta, x), do: theta[x]
-  defp apply_subtitution(_theta, {:var, x}), do: {:var, x}
-  defp apply_subtitution(_theta, {:ground, t}), do: {:ground, t}
+  defp apply_subtitution(theta, {:var, x}) when belongs_to(theta, x) do
+    # Logger.warn "apply_subtitution/2: when var belongs to theta"
+    # Logger.info "theta[x] : #{inspect(theta[x])}"
+    theta[x]
+  end
+  defp apply_subtitution(_theta, {:var, x}) do
+    # Logger.warn "apply_subtitution/2: when var does not belong to theta"
+    # Logger.info "{:var, x} : {:var, #{inspect(x)}}"
+    {:var, x}
+  end
+  defp apply_subtitution(_theta, {:ground, t}) do
+    # Logger.warn "apply_subtitution/2: when x is a ground term"
+    # Logger.info "{:ground, t} : {:ground, #{inspect(t)}}"
+    {:ground, t}
+  end
+
+  # defp apply_subtitution(theta, t) when is_tuple_term(t) do
+  #   # Logger.warn "apply_subtitution/2: when t is a tuple"
+  #   # Logger.info "theta: #{inspect(theta)}"
+  #   # Logger.info "t: #{inspect(t)}"
+  #   c = components_of(t)
+  #   # Logger.info "c: #{inspect(c)}"
+  #   if c == [var: "X", ground: 3] do
+  #     IEx.pry
+  #   end
+  #   c1 = apply_subtitution(theta, c)
+  #   # Logger.info "c1: #{inspect(c1)}"
+
+  #   case c1 do
+  #     {:ground, l} -> {:ground, List.to_tuple(l)}
+  #     _ -> List.to_tuple(c1)
+  #   end
+  # end
 
   defp apply_subtitution(theta, t) when is_tuple_term(t) do
-    c = components_of(t)
-    c1 = apply_subtitution(theta, c)
-
-    case c1 do
-      {:ground, l} -> {:ground, List.to_tuple(l)}
-      _ -> List.to_tuple(c1)
-    end
+    list = t |> Tuple.to_list |> Enum.map(fn tx -> apply_subtitution(theta, tx) end)
+    Core.build_tuple(list)
   end
 
   # This code still does not work as expected
-  defp apply_subtitution(theta, t) when is_list_term(t) do
-    all_grounds(apply_subtitution(theta, t))
-  end
+  # defp apply_subtitution(theta, t) when is_list_term(t) do
+  #   # # Logger.info "apply_subtitution/2: when t is a list"
+  #   # # Logger.info "t: #{inspect(t)}"
+  #   all_grounds(apply_subtitution(theta, t))
+  # end
 
-  @spec apply_subtitution(%{String.t() => t()}, [t()]) :: [t()]
+  # @spec apply_subtitution(%{String.t() => t()}, [t()]) :: [t()]
   # defp apply_subtitution(_theta, [], acc), do: acc
 
-  defp apply_subtitution(theta, [h|t]) do
-    h_result = apply_subtitution(theta, h)
-    t_result = apply_subtitution(theta, t)
-    Core.build_list(h_result, t_result)
+  defp apply_subtitution(_theta, []) do
+    # Logger.warn "apply_subtitution/2 when t is a empty list"
+    []
   end
+
+  defp apply_subtitution(theta, [h|t]) do
+    # Logger.warn "apply_subtitution/2: when t is a maybe improper list"
+    # Logger.info "[h: #{inspect(h)}  | t: #{inspect(t)}]"
+    # Logger.info "theta: #{inspect(theta)}"
+    # Logger.info "applying subtitution with head"
+    h_result = apply_subtitution(theta, h)
+    # Logger.info "applying subtitution with tail"
+    t_result = apply_subtitution(theta, t)
+    # Logger.info "[h_result: #{inspect(h_result)}  | t_result: #{inspect(t_result)}]"
+    all_grounds(Core.build_list(h_result, t_result))
+  end
+
+  # defp apply_subtitution(theta, list) do
+  #   all_grounds(apply_subtitution(theta, list, []))
+  # end
+
+  # defp apply_subtitution(_theta, [], acc), do: Enum.reverse(acc)
+
+  # defp apply_subtitution(theta, [h|t], acc) do
+  #   # Logger.warn "apply_subtitution/3 on maybe improper list"
+  #   # Logger.info "h: #{inspect(h)}"
+  #   # Logger.info "t: #{inspect(t)}"
+  #   # Logger.info "theta: #{inspect(theta)}"
+  #   # Logger.info "acc: #{inspect(acc)}"
+  #   h_result = apply_subtitution(theta, h)
+  #   apply_subtitution(theta, t, [h_result|acc])
+  # end
+
   # defp apply_subtitution(theta, t) when is_list_term(t) do
-  #   # Logger.warn("t: #{inspect(t)}")
+  #   # # # Logger.warn("t: #{inspect(t)}")
   #   # IEx.pry
   #   if is_list(t) do
   #     IEx.pry
   #   end
   #   something = Enum.map(t, fn x ->
-  #     # Logger.info("apply_subtitution inside a Enum.map")
-  #     # Logger.info("x: #{inspect(x)}")
-  #     # Logger.info("theta: #{inspect(theta)}")
+  #     # # # Logger.info("apply_subtitution inside a Enum.map")
+  #     # # # Logger.info("x: #{inspect(x)}")
+  #     # # # Logger.info("theta: #{inspect(theta)}")
   #     apply_subtitution(theta, x)
   #     end
   #   )
-  #   # Logger.info("something: #{inspect(something)}")
+  #   # # # Logger.info("something: #{inspect(something)}")
   #   all_grounds(something)
   # end
   # This code still does not work as expected
@@ -187,17 +269,33 @@ defmodule Unification do
   defp components_of(t) when is_tuple(t), do: Tuple.to_list(t)
 
   # @spec components_of_list(list() | ground_term()) :: [term()]
+  def components_of_list([]), do: []
   def components_of_list({:ground, []}), do: []
   def components_of_list({:ground, [h | t]}), do: [{:ground, h}, {:ground, t}]
   def components_of_list([h | t]), do: [h, t]
   # defp components_of_list({:ground, t}), do: t |> Enum.map(&{:ground, &1})
   # defp components_of_list(t) when is_list(t), do: t
 
-  @spec all_grounds([t()]) :: {:ground, [term()]} | [t()]
-  defp all_grounds(t) do
-    case Enum.all?(t, fn tx -> is_ground_term?(tx) end) do
-      true -> {:ground, Enum.map(t, fn {:ground, tx} -> tx end)}
-      false -> t
+  # @spec all_grounds([t()]) :: {:ground, [term()]} | [t()]
+  # defp all_grounds(t) do
+  #   case Enum.all?(t, fn tx -> is_ground_term?(tx) end) do
+  #     true -> {:ground, Enum.map(t, fn {:ground, tx} -> tx end)}
+  #     false -> t
+  #   end
+  # end
+
+  def all_grounds({:ground, term}) when is_list(term), do: {:ground, term}
+  def all_grounds(list) do
+    all_grounds(list, list, [])
+  end
+
+  def all_grounds([], _list, acc), do: {:ground, Enum.reverse(acc)}
+  def all_grounds([h|t], list, acc) do
+    case is_ground_term?(h) do
+      true ->
+        {:ground, term} = h
+        all_grounds(t, list, [term | acc])
+      false -> list
     end
   end
 

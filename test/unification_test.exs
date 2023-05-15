@@ -53,10 +53,20 @@ defmodule UnificationTest do
              "Y" => {:ground, {3, 4}}
            }
 
+    assert unify({{:var, "X"}, {:var, "Y"}}, {{{:ground, 1}, {:ground, 2}}, {{:ground, 3}, {:ground, 4}}}, %{}) == %{
+            "X" => {:ground, {1, 2}},
+            "Y" => {:ground, {3, 4}}
+          }
+
     assert unify({{:var, "X"}, {:var, "Y"}}, {{:ground, [1, 2]}, {:ground, [3, 4]}}, %{}) == %{
              "X" => {:ground, [1, 2]},
              "Y" => {:ground, [3, 4]}
            }
+
+    assert unify({{:var, "X"}, {:var, "Y"}}, {[{:ground, 1}, {:ground, 2}], [{:ground, 3}, {:ground, 4}]}, %{}) == %{
+            "X" => {:ground, [1, 2]},
+            "Y" => {:ground, [3, 4]}
+          }
 
     assert unify(
              {{:var, "T"}, {:var, "S"}},
