@@ -357,6 +357,11 @@ defmodule CoreTest do
              %{"X" => {:ground, [1]}}
            ]
 
-    # assert append({:ground, [1]}, {:ground, []}, {:var, "X"}).(%{}) |> Enum.into([]) == [%{"X" => {:ground, [1]}}]
+    assert append({:ground, [1, 2]}, {:ground, [3]}, {:var, "X"}).(%{}) |> Enum.into([]) ==
+            [%{"X" => {:ground, [1, 2, 3]}}]
+
+    assert append({:ground, [1]}, {:ground, []}, {:var, "X"}).(%{}) |> Enum.into([]) == [%{"X" => {:ground, [1]}}]
+
+    assert append({:var, "X"}, {:ground, []}, {:ground, [1]}).(%{}) |> Enum.into([]) == [%{"X" => {:ground, [1]}}]
   end
 end

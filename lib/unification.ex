@@ -5,7 +5,6 @@ defmodule Unification do
   require Logger
   require IEx
 
-
   #########
   # Types #
   #########
@@ -110,32 +109,19 @@ defmodule Unification do
   end
 
   defp vars(theta, t) when is_tuple(t) do
-    # Logger.warn "vars/2 when t is tuple"
-    # Logger.info "theta: #{inspect(theta)}"
-    # Logger.info "t: #{inspect(t)}"
     c = components_of(t)
     vars(theta, c)
   end
 
-  defp vars(theta, []) do
-    # Logger.warn "vars/2 when t is empty list"
-    MapSet.new(theta)
-  end
+  defp vars(theta, []), do: MapSet.new(theta)
 
   defp vars(theta, [h|t]) do
-    # Logger.warn "vars/2 when t is maybe improper list"
     theta1 = vars(theta, h)
     MapSet.union(theta1, vars(theta1, t))
   end
 
   @spec unify_variable(String.t(), t(), %{String.t() => t()}) :: %{String.t() => t()}
-  defp unify_variable(x, t, theta) do
-    # Logger.warn "unify_variable/3: Unifying x with t in theta"
-    # Logger.info "x: #{inspect(x)}"
-    # Logger.info "t: #{inspect(t)}"
-    # Logger.info "theta: #{inspect(theta)}"
-    apply_subtitutions(Map.put(theta, x, t))
-  end
+  defp unify_variable(x, t, theta), do: apply_subtitutions(Map.put(theta, x, t))
 
   @spec apply_subtitutions(%{String.t() => t()}) :: %{String.t() => t()}
   defp apply_subtitutions(theta) do
@@ -148,42 +134,23 @@ defmodule Unification do
   end
 
   @spec apply_subtitution(%{String.t() => t()}, t()) :: t()
-  defp apply_subtitution(theta, {:var, x}) when belongs_to(theta, x) do
-    # Logger.warn "apply_subtitution/2: when var belongs to theta"
-    # Logger.info "theta[x] : #{inspect(theta[x])}"
-    theta[x]
-  end
-  defp apply_subtitution(_theta, {:var, x}) do
-    # Logger.warn "apply_subtitution/2: when var does not belong to theta"
-    # Logger.info "{:var, x} : {:var, #{inspect(x)}}"
-    {:var, x}
-  end
-  defp apply_subtitution(_theta, {:ground, t}) do
-    # Logger.warn "apply_subtitution/2: when x is a ground term"
-    # Logger.info "{:ground, t} : {:ground, #{inspect(t)}}"
-    {:ground, t}
-  end
+  defp apply_subtitution(theta, {:var, x}) when belongs_to(theta, x), do: theta[x]
+
+  defp apply_subtitution(_theta, {:var, x}), do: {:var, x}
+
+  defp apply_subtitution(_theta, {:ground, t}), do: {:ground, t}
 
   defp apply_subtitution(theta, t) when is_tuple_term(t) do
     list = t |> Tuple.to_list |> Enum.map(fn tx -> apply_subtitution(theta, tx) end)
     Core.build_tuple(list)
   end
 
-  defp apply_subtitution(_theta, []) do
-    # Logger.warn "apply_subtitution/2 when t is a empty list"
-    []
-  end
+  defp apply_subtitution(_theta, []), do: []
 
   defp apply_subtitution(theta, [h|t]) do
-    # Logger.warn "apply_subtitution/2: when t is a maybe improper list"
-    # Logger.info "[h: #{inspect(h)}  | t: #{inspect(t)}]"
-    # Logger.info "theta: #{inspect(theta)}"
-    # Logger.info "applying subtitution with head"
     h_result = apply_subtitution(theta, h)
-    # Logger.info "applying subtitution with tail"
     t_result = apply_subtitution(theta, t)
-    # Logger.info "[h_result: #{inspect(h_result)}  | t_result: #{inspect(t_result)}]"
-    all_grounds(Core.build_list(h_result, t_result))
+    Core.build_list(h_result, t_result)
   end
 
   @spec components_of(tuple()) :: [term()]
@@ -196,9 +163,9 @@ defmodule Unification do
   def components_of_list({:ground, [h | t]}), do: [{:ground, h}, {:ground, t}]
   def components_of_list([h | t]), do: [h, t]
 
-  def all_grounds({:ground, term}) when is_list(term), do: {:ground, term}
-  def all_grounds(list) do
-    all_grounds(list, list, [])
+  # def all_grounds({:ground, term}) when is_list(term), do: {:ground, term}
+  def all_grounds(term) do
+    all_grounds(term, term, [])
   end
 
   def all_grounds([], _list, acc), do: {:ground, Enum.reverse(acc)}
