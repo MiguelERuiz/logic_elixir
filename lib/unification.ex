@@ -150,6 +150,7 @@ defmodule Unification do
   defp apply_subtitution(theta, [h|t]) do
     h_result = apply_subtitution(theta, h)
     t_result = apply_subtitution(theta, t)
+    # all_grounds(Core.build_list(h_result, t_result))
     Core.build_list(h_result, t_result)
   end
 
