@@ -145,7 +145,7 @@ defmodule Unification do
     Core.build_tuple(list)
   end
 
-  defp apply_subtitution(_theta, []), do: []
+  # defp apply_subtitution(_theta, []), do: [] # This should be dead code
 
   defp apply_subtitution(theta, [h|t]) do
     h_result = apply_subtitution(theta, h)
