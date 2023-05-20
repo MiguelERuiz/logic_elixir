@@ -126,10 +126,7 @@ defmodule Unification do
   @spec apply_subtitutions(%{String.t() => t()}) :: %{String.t() => t()}
   defp apply_subtitutions(theta) do
     :maps.map(fn _k, v ->
-      case apply_subtitution(theta, v) do
-        [] -> {:ground, []}
-        subt -> subt
-      end
+      apply_subtitution(theta, v)
     end, theta)
   end
 
