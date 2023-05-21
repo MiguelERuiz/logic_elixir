@@ -213,13 +213,18 @@ defmodule Core do
     end
   end
 
-  def tr_term(_delta, _x, []), do: []
+  # def tr_term(_delta, _x, []), do: []
 
   def tr_term(delta, x, [{:|, _metadata, [t, sublist]}]) do
     head = tr_term(delta, x, t)
     tail = tr_term(delta, x, sublist)
-    # quote do: build_list([unquote(head) | unquote(tail)])
+    # quote do: [unquote(head) | unquote(tail)]
     quote do: build_list(unquote(head), unquote(tail))
+  end
+
+  def tr_term(delta, x, [h | []]) do
+    head = tr_term(delta, x, h)
+    quote do: [unquote(head) | {:ground, []}]
   end
 
   def tr_term(delta, x, [h | t]) do
@@ -262,19 +267,9 @@ defmodule Core do
     end
   end
 
-  # def build_list([{:ground, h} | {:ground, t}]), do: {:ground, [h | t]}
-  # def build_list([{:ground, h} | []]), do: {:ground, [h]}
-  # def build_list([h | t]), do: [h | t]
-  def build_list({:ground, h}, []), do: {:ground, [h]}
-  def build_list({:ground, h}, {:ground, t}) do
-    Logger.info("build_list/2: both terms ground!")
-    {:ground, [h | t]}
-  end
+  def build_list({:ground, h}, {:ground, t}), do: {:ground, [h | t]}
 
-  def build_list(h, t) do
-    Logger.info("build_list/2: both terms are whatever")
-    [h | t]
-  end
+  def build_list(h, t), do: [h | t]
 
   def groundify(_theta, {:ground, t}), do: t
 

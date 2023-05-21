@@ -136,14 +136,17 @@ defmodule Template do
     X = {1, 2, 3}
   end
 
+  # TODO review the generation
   defcore pred26(X, Y, Z) do
     [X, Y, Z] = [1, 2, 3]
   end
 
+  # TODO review the generation
   defcore pred27() do
     [X, Y, Z] = [1, 2, 3]
   end
 
+  # TODO review the generation
   defcore pred28() do
     [X, Y, Z, T] = [1, 2, 3]
   end
@@ -190,6 +193,7 @@ defmodule Template do
     Xs = [X | [Y]]
   end
 
+  # TODO review the generation
   defcore pred39() do
     [1, 2] = [X]
   end
@@ -241,7 +245,27 @@ defmodule Template do
   end
 
   defcore pred44(X, Y, Z, T) do
-    X = [Y | [Z | T]]
+    X = [Y | [Z | T]] # [Y | [Z | T]] must be converted into [{:var, y1} | [{:var, y2} | {:var, y3}]]
+  end
+
+  defcore pred45(X) do
+    X = {7, 8}
+  end
+
+  defcore pred46(X) do
+    X = [5]
+  end
+
+  defcore pred47(X) do
+    X = [5, 7]
+  end
+
+  defcore pred48(X) do
+    X = [5, 7, 9]
+  end
+
+  defcore pred49(X, Y) do
+    [X | Y] = [1 | 2]
   end
 
   defcore is_ordered(Xs) do
