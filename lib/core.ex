@@ -32,10 +32,7 @@ defmodule Core do
   end
 
   defmacro defcore(pred_name, [do: do_block]) do
-    result = tr_def(pred_name, do_block)
-    Macro.to_string(result) |> IO.puts()
-    inspect(result, limit: :infinity)
-    result
+    tr_def(pred_name, do_block)
   end
 
   #############
@@ -51,7 +48,7 @@ defmodule Core do
   end
 
   def tr_def(predicate_name_node, do_block) do
-    VarBuilder.start_link
+    # VarBuilder.start_link
     {predicate_name, _metadata, predicate_args} = predicate_name_node
 
     goals =
@@ -111,6 +108,10 @@ defmodule Core do
       end
     end
   end
+
+  ###########
+  #  Goals  #
+  ###########
 
   def tr_goals(_delta, []) do
     quote do
@@ -172,7 +173,17 @@ defmodule Core do
     end
   end
 
+  ###########
+  #  Terms  #
+  ###########
+
   def tr_term(delta, _x, {:__aliases__, _metadata, [logic_var]}), do: {:var, delta[logic_var]}
+
+  # This matches tuples of size != 2. Issue the command "h Kernel.SpecialForms.{}"
+  def tr_term(delta, x, {:{}, _metadata, elements}) do
+    list = elements |> Enum.map(fn tx -> tr_term(delta, x, tx) end)
+    Macro.escape(build_tuple(list))
+  end
 
   def tr_term(delta, x, {function_name, _metadata, arguments}) do
     x_args = case arguments do
@@ -216,12 +227,17 @@ defmodule Core do
     quote do: unquote(build_list(head, tail))
   end
 
+  # This matches tuples with size == 2
   def tr_term(delta, x, tuple) when is_tuple(tuple) do
     list = tuple |> Tuple.to_list() |> Enum.map(fn tx -> tr_term(delta, x, tx) end)
     quote do: unquote(build_tuple(list))
   end
 
   def tr_term(_delta, _x, lit), do: {:ground, lit}
+
+  ###############################
+  #  Public auxiliar functions  #
+  ###############################
 
   def unify_gen(theta, t1, t2) do
     case unify(t1, t2, theta) do
