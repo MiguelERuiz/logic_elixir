@@ -1,15 +1,6 @@
 defmodule Utils do
   require Logger
 
-  @spec load_template() :: {:ok, tuple()}
-  def load_template do
-    "lib/template.ex"
-    |>
-    File.read!
-    |>
-    Code.string_to_quoted
-  end
-
   @spec get_ast(atom()) :: nil | tuple()
   def get_ast(pred_name) do
     {:ok, ast_template} = load_template()
@@ -38,5 +29,14 @@ defmodule Utils do
       {:def, _metadata, _} -> ast |> Macro.to_string |> IO.puts
       {:defcore, _metadata, _} -> ast |> Core.trace_defcore
     end
+  end
+
+  @spec load_template() :: {:ok, tuple()}
+  defp load_template do
+    "lib/template.ex"
+    |>
+    File.read!
+    |>
+    Code.string_to_quoted
   end
 end
