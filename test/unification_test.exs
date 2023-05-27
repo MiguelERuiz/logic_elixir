@@ -163,5 +163,9 @@ defmodule UnificationTest do
 
     assert unify(
       [{:var, "Xs"} | {:ground, []}], {:ground, []}, %{}) == :unmatch
+
+    assert unify(
+      [{:ground, 1}, {:ground, 2} | {:ground, 3}], [{:var, "X"}, {:var, "Y"}, {:var, "Z"}], %{}
+    ) == :unmatch
   end
 end

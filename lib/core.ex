@@ -213,7 +213,7 @@ defmodule Core do
     end
   end
 
-  # def tr_term(_delta, _x, []), do: []
+  def tr_term(_delta, _x, []), do: {:ground, []}
 
   def tr_term(delta, x, [{:|, _metadata, [t, sublist]}]) do
     head = tr_term(delta, x, t)
@@ -222,15 +222,16 @@ defmodule Core do
     quote do: build_list(unquote(head), unquote(tail))
   end
 
-  def tr_term(delta, x, [h | []]) do
-    head = tr_term(delta, x, h)
-    quote do: [unquote(head) | {:ground, []}]
-  end
+  # def tr_term(delta, x, [h | []]) do
+  #   head = tr_term(delta, x, h)
+  #   quote do: [unquote(head) | {:ground, []}]
+  #   quote do: build_list(unquote(head), {:ground, []})
+  # end
 
   def tr_term(delta, x, [h | t]) do
     head = tr_term(delta, x, h)
     tail = tr_term(delta, x, t)
-    quote do: unquote(build_list(head, tail))
+    quote do: build_list(unquote(head), unquote(tail))
   end
 
   # This matches tuples with size == 2
