@@ -20,18 +20,13 @@ defmodule Core do
   # Macros #
   ##########
 
-  # defmacro __before_compile__(_env) do
-  #   VarBuilder.start_link()
-  # end
-
   defmacro __using__(_params) do
     quote do
       import Core
-      # @before_compile Core
     end
   end
 
-  defmacro defcore(pred_name, [do: do_block]) do
+  defmacro defcore(pred_name, do: do_block) do
     tr_def(pred_name, do_block)
   end
 
@@ -39,10 +34,6 @@ defmodule Core do
   # Functions #
   #############
 
-  # DEBUG code, delete when defcore macro works as expected
-  def trace_defcore(ast), do: ast |> tr_def |> Macro.to_string |> IO.puts
-
-  # TODO delete this code when defcore macro works as expected
   def tr_def({:defcore, _metadata, [predicate_name_node, [do: do_block]]}) do
     tr_def(predicate_name_node, do_block)
   end
@@ -78,8 +69,6 @@ defmodule Core do
 
     vars_goals = goals |> vars() |> Enum.filter(fn var -> not Enum.member?(logic_vars, var) end)
 
-    # Logger.info("VARS IN TR_DEF: #{inspect(vars_goals)}")
-
     y_list =
       case vars_goals do
         [] ->
@@ -90,14 +79,21 @@ defmodule Core do
           |> Enum.map(fn y -> String.to_atom("y#{y}") |> Macro.unique_var(__MODULE__) end)
       end
 
-    delta_keys = :lists.flatten([logic_vars, vars_goals])
-    delta_values = :lists.flatten([x_list, y_list])
+    delta_keys = List.flatten([logic_vars, vars_goals])
+    delta_values = List.flatten([x_list, y_list])
     delta = Enum.zip(delta_keys, delta_values) |> Enum.into(%{})
 
     quote do
       def unquote({predicate_name, [], t_list}) do
-        unquote({:__block__, [], x_list |> Enum.map(fn x -> (quote do: unquote(x) = VarBuilder.gen_var()) end)})
-        unquote({:__block__, [], y_list |> Enum.map(fn y -> (quote do: unquote(y) = VarBuilder.gen_var()) end)})
+        unquote(
+          {:__block__, [],
+           x_list |> Enum.map(fn x -> quote do: unquote(x) = VarBuilder.gen_var() end)}
+        )
+
+        unquote(
+          {:__block__, [],
+           y_list |> Enum.map(fn y -> quote do: unquote(y) = VarBuilder.gen_var() end)}
+        )
 
         fn th1 ->
           th2 = Map.merge(th1, Map.new(unquote(Enum.zip(x_list, t_list))))
@@ -142,11 +138,16 @@ defmodule Core do
 
   def tr_goal(delta, {:choice, _metadata, [choice_block]}) do
     th = Macro.unique_var(:th, __MODULE__)
+
     quote do
       fn unquote(th) ->
-        unquote(choice_block |> Enum.map(fn {_choice_op, {:__block__, _metadata, goal}} -> tr_goals(delta, goal)
-                                            {_choice_op, goal} -> tr_goals(delta, [goal])
-                                         end))
+        unquote(
+          choice_block
+          |> Enum.map(fn
+            {_choice_op, {:__block__, _metadata, goal}} -> tr_goals(delta, goal)
+            {_choice_op, goal} -> tr_goals(delta, [goal])
+          end)
+        )
         |> Stream.flat_map(fn f -> f.(unquote(th)) end)
       end
     end
@@ -182,33 +183,35 @@ defmodule Core do
   # This matches tuples of size != 2. Issue the command "h Kernel.SpecialForms.{}"
   def tr_term(delta, x, {:{}, _metadata, elements}) do
     list = elements |> Enum.map(fn tx -> tr_term(delta, x, tx) end)
-    Macro.escape(build_tuple(list))
+    Macro.escape(TermBuilder.build_tuple(list))
   end
 
   def tr_term(delta, x, {function_name, _metadata, arguments}) do
-    x_args = case arguments do
-      [] -> %{}
-      _ ->
-        1..length(arguments)
-        |>
-        Enum.map(fn x ->
-          String.to_atom("x#{x}") |> Macro.unique_var(__MODULE__) end)
-        |>
-        Enum.zip(arguments)
-        |>
-        Enum.into(%{})
-    end
+    x_args =
+      case arguments do
+        [] ->
+          %{}
+
+        _ ->
+          1..length(arguments)
+          |> Enum.map(fn x ->
+            String.to_atom("x#{x}") |> Macro.unique_var(__MODULE__)
+          end)
+          |> Enum.zip(arguments)
+          |> Enum.into(%{})
+      end
 
     xs = x_args |> Map.keys
+
     quote do
       unquote(
         {:__block__, [],
-            x_args |> Enum.map(
-                      fn {xx, tx} ->
-                          (quote do: unquote(xx) = groundify(unquote(x), unquote(tr_term(delta, x, tx))))
-                      end)
-        }
+         x_args
+         |> Enum.map(fn {xx, tx} ->
+           quote do: unquote(xx) = groundify(unquote(x), unquote(tr_term(delta, x, tx)))
+         end)}
       )
+
       unquote({:ground, {function_name, [], xs}})
     end
   end
@@ -218,26 +221,19 @@ defmodule Core do
   def tr_term(delta, x, [{:|, _metadata, [t, sublist]}]) do
     head = tr_term(delta, x, t)
     tail = tr_term(delta, x, sublist)
-    # quote do: [unquote(head) | unquote(tail)]
-    quote do: build_list(unquote(head), unquote(tail))
+    quote do: TermBuilder.build_list(unquote(head), unquote(tail))
   end
-
-  # def tr_term(delta, x, [h | []]) do
-  #   head = tr_term(delta, x, h)
-  #   quote do: [unquote(head) | {:ground, []}]
-  #   quote do: build_list(unquote(head), {:ground, []})
-  # end
 
   def tr_term(delta, x, [h | t]) do
     head = tr_term(delta, x, h)
     tail = tr_term(delta, x, t)
-    quote do: build_list(unquote(head), unquote(tail))
+    quote do: TermBuilder.build_list(unquote(head), unquote(tail))
   end
 
   # This matches tuples with size == 2
   def tr_term(delta, x, tuple) when is_tuple(tuple) do
-    list = tuple |> Tuple.to_list() |> Enum.map(fn tx -> tr_term(delta, x, tx) end)
-    quote do: unquote(build_tuple(list))
+    list = tuple |> Tuple.to_list |> Enum.map(fn tx -> tr_term(delta, x, tx) end)
+    quote do: unquote(TermBuilder.build_tuple(list))
   end
 
   def tr_term(_delta, _x, lit), do: {:ground, lit}
@@ -257,39 +253,24 @@ defmodule Core do
   def check_b(_, nil), do: []
   def check_b(theta, _), do: [theta]
 
-  def build_tuple(terms) do
-    if Enum.all?(terms, &match?({:ground, _}, &1)) do
-      {:ground,
-        terms
-        |> Enum.map(fn {:ground, t} -> t end)
-        |> List.to_tuple() }
-    else
-      List.to_tuple(terms)
-    end
-  end
-
-  def build_list({:ground, h}, {:ground, t}), do: {:ground, [h | t]}
-
-  def build_list(h, t), do: [h | t]
-
   def groundify(_theta, {:ground, t}), do: t
 
   def groundify(theta, {:var, x}) when is_map_key(theta, x) do
     case theta[x] do
       {:ground, t} -> t
-      _ -> throw "#{inspect(theta[x])} is not bound to a fully instatiated term"
+      _ -> throw("#{inspect(theta[x])} is not bound to a fully instatiated term")
     end
   end
 
   def groundify(_theta, {:var, x}) do
-    throw "#{x} is not instantiated"
+    throw("#{x} is not instantiated")
   end
 
   def groundify(theta, t) when is_tuple(t) do
     t
-    |> Tuple.to_list()
+    |> Tuple.to_list
     |> Enum.map(&groundify(theta, &1))
-    |> List.to_tuple()
+    |> List.to_tuple
   end
 
   def groundify(theta, [t1 | t2]) do
@@ -301,37 +282,21 @@ defmodule Core do
   #####################
 
   defp vars(goals) when is_list(goals) do
-    # Logger.info("GOALS: #{inspect(goals)}")
-    vars_goals = goals
-        |> Enum.map(fn goal -> vars_in_goal(goal) end)
-    # Logger.info("VARS IN GOALS: #{inspect(vars_goals)}")
-    logic_vars = vars_goals
-        |> :lists.flatten()
-        |> Enum.filter(fn arg -> is_logic_variable?(arg) end)
-        # |> Enum.uniq()
-    # Logger.info("VARS AFTER FILTERS: #{inspect(logic_vars)}")
-    logic_variables =
-    logic_vars
-    |> Enum.map(fn {:__aliases__, _metadata, [logic_variable]} -> logic_variable
-                end)
-    |> Enum.uniq()
-    # Logger.info("LOGIC VARIABLES IN VARS/1: #{inspect(logic_variables)}")
-    logic_variables
+    goals
+    |> Enum.map(fn goal -> vars_in_goal(goal) end)
+    |> List.flatten
+    |> Enum.filter(fn arg -> is_logic_variable?(arg) end)
+    |> Enum.map(fn {:__aliases__, _metadata, [logic_variable]} -> logic_variable end)
+    |> Enum.uniq
   end
 
   defp vars_in_goal({:=, _metadata, [t1, t2]}) do
-    # Logger.info("= OPERATOR: T1: #{inspect(t1)}  T2: #{inspect(t2)}")
     terms1 = flat_terms(t1)
-    # Logger.info("FLAT TERMS of T1: #{inspect(terms1)}")
     terms2 = flat_terms(t2)
-    # Logger.info("FLAT TERMS of T2: #{inspect(terms2)}")
     [terms1, terms2]
   end
 
-  defp vars_in_goal({:choice, _metadata, [choice_block]}) do
-    # Logger.info("CHOICE BLOCK: #{inspect(choice_block)}")
-    choice_vars(choice_block)
-  end
+  defp vars_in_goal({:choice, _metadata, [choice_block]}), do: choice_vars(choice_block)
 
   defp vars_in_goal({:__block__, _metadata, block}) do
     block |> Enum.map(fn goal -> vars_in_goal(goal) end)
@@ -343,38 +308,51 @@ defmodule Core do
 
   defp vars_in_goal(_), do: []
 
-  defp flat_terms({:__aliases__, _metadata, [logic_variable]} = term) when is_atom(logic_variable), do: term
+  defp flat_terms({:__aliases__, _metadata, [logic_variable]} = term)
+       when is_atom(logic_variable),
+       do: term
+
   defp flat_terms(terms) when is_tuple(terms), do: Tuple.to_list(terms)
   defp flat_terms([{:|, _metadata, terms}]), do: flat_pipe_terms(terms)
   defp flat_terms(terms), do: terms
 
-  defp flat_at_terms([{:___aliases__, _metadata, [logic_variable]} = term]) when is_atom(logic_variable), do: term
+  defp flat_at_terms([{:___aliases__, _metadata, [logic_variable]} = term])
+       when is_atom(logic_variable),
+       do: term
+
   defp flat_at_terms([{_operator, _metadata, op_arguments}]), do: op_arguments
   defp flat_at_terms(_), do: []
 
   defp flat_pipe_terms([t1, t2]) do
-    # Logger.info("Flatting pipe terms...")
-    ts = case t2 do
-      [] -> []
-      [{:|, _metadata, terms}] -> flat_pipe_terms(terms)
-      _ -> t2
-    end
+    ts =
+      case t2 do
+        [] -> []
+        [{:|, _metadata, terms}] -> flat_pipe_terms(terms)
+        _ -> t2
+      end
+
     [t1, ts]
   end
 
   defp choice_vars([{:do, do_block}, {:else, else_block} | rest]) do
     do_block_vars = vars_in_goal(do_block)
     else_block_vars = vars_in_goal(else_block)
-    result = case rest do
-      [] -> [do_block_vars, else_block_vars]
-      _ ->
-        rest_block_vars =
-          rest
-          |> Enum.map(fn {:else, extra_else_block} ->
-            vars_in_goal(extra_else_block)
-          end)
-        [do_block_vars, else_block_vars, rest_block_vars]
-    end
+
+    result =
+      case rest do
+        [] ->
+          [do_block_vars, else_block_vars]
+
+        _ ->
+          rest_block_vars =
+            rest
+            |> Enum.map(fn {:else, extra_else_block} ->
+              vars_in_goal(extra_else_block)
+            end)
+
+          [do_block_vars, else_block_vars, rest_block_vars]
+      end
+
     result
   end
 

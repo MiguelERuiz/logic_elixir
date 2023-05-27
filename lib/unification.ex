@@ -27,7 +27,10 @@ defmodule Unification do
   ##########
 
   defguardp is_tuple_term(t) when is_tuple(t) and (elem(t, 0) != :ground or is_tuple(elem(t, 1)))
-  defguardp is_list_term(t) when is_list(t) or (is_tuple(t) and (elem(t, 0) == :ground and is_list(elem(t, 1))))
+
+  defguardp is_list_term(t)
+            when is_list(t) or (is_tuple(t) and (elem(t, 0) == :ground and is_list(elem(t, 1))))
+
   defguardp belongs_to(theta, t) when is_map_key(theta, t)
 
   #############
@@ -85,8 +88,8 @@ defmodule Unification do
     c2 = components_of_list(t2)
 
     case {c1, c2} do
-      {[], [_|_]} -> :unmatch
-      {[_|_], []} -> :unmatch
+      {[], [_ | _]} -> :unmatch
+      {[_ | _], []} -> :unmatch
       _ -> unify(c1, c2, theta)
     end
   end
@@ -115,7 +118,7 @@ defmodule Unification do
 
   defp vars(theta, []), do: MapSet.new(theta)
 
-  defp vars(theta, [h|t]) do
+  defp vars(theta, [h | t]) do
     theta1 = vars(theta, h)
     MapSet.union(theta1, vars(theta1, t))
   end
@@ -125,9 +128,12 @@ defmodule Unification do
 
   @spec apply_subtitutions(%{String.t() => t()}) :: %{String.t() => t()}
   defp apply_subtitutions(theta) do
-    :maps.map(fn _k, v ->
-      apply_subtitution(theta, v)
-    end, theta)
+    :maps.map(
+      fn _k, v ->
+        apply_subtitution(theta, v)
+      end,
+      theta
+    )
   end
 
   @spec apply_subtitution(%{String.t() => t()}, t()) :: t()
@@ -138,17 +144,14 @@ defmodule Unification do
   defp apply_subtitution(_theta, {:ground, t}), do: {:ground, t}
 
   defp apply_subtitution(theta, t) when is_tuple_term(t) do
-    list = t |> Tuple.to_list |> Enum.map(fn tx -> apply_subtitution(theta, tx) end)
-    Core.build_tuple(list)
+    list = t |> Tuple.to_list() |> Enum.map(fn tx -> apply_subtitution(theta, tx) end)
+    TermBuilder.build_tuple(list)
   end
 
-  # defp apply_subtitution(_theta, []), do: [] # This should be dead code
-
-  defp apply_subtitution(theta, [h|t]) do
+  defp apply_subtitution(theta, [h | t]) do
     h_result = apply_subtitution(theta, h)
     t_result = apply_subtitution(theta, t)
-    # all_grounds(Core.build_list(h_result, t_result))
-    Core.build_list(h_result, t_result)
+    TermBuilder.build_list(h_result, t_result)
   end
 
   @spec components_of(tuple()) :: [term()]
@@ -160,23 +163,4 @@ defmodule Unification do
   def components_of_list({:ground, []}), do: []
   def components_of_list({:ground, [h | t]}), do: [{:ground, h}, {:ground, t}]
   def components_of_list([h | t]), do: [h, t]
-
-  # def all_grounds({:ground, term}) when is_list(term), do: {:ground, term}
-  def all_grounds(term) do
-    all_grounds(term, term, [])
-  end
-
-  def all_grounds([], _list, acc), do: {:ground, Enum.reverse(acc)}
-  def all_grounds([h|t], list, acc) do
-    case is_ground_term?(h) do
-      true ->
-        {:ground, term} = h
-        all_grounds(t, list, [term | acc])
-      false -> list
-    end
-  end
-
-  @spec is_ground_term?(t()) :: boolean()
-  defp is_ground_term?({:ground, _t}), do: true
-  defp is_ground_term?(_), do: false
 end

@@ -55,6 +55,7 @@ defmodule Template do
     else
       X = 2
     end
+
     Y = 3
   end
 
@@ -136,17 +137,14 @@ defmodule Template do
     X = {1, 2, 3}
   end
 
-  # TODO review the generation
   defcore pred26(X, Y, Z) do
     [X, Y, Z] = [1, 2, 3]
   end
 
-  # TODO review the generation
   defcore pred27() do
     [X, Y, Z] = [1, 2, 3]
   end
 
-  # TODO review the generation
   defcore pred28() do
     [X, Y, Z, T] = [1, 2, 3]
   end
@@ -193,7 +191,6 @@ defmodule Template do
     Xs = [X | [Y]]
   end
 
-  # TODO review the generation
   defcore pred39() do
     [1, 2] = [X]
   end
@@ -245,7 +242,8 @@ defmodule Template do
   end
 
   defcore pred44(X, Y, Z, T) do
-    X = [Y | [Z | T]] # [Y | [Z | T]] must be converted into [{:var, y1} | [{:var, y2} | {:var, y3}]]
+    # [Y | [Z | T]] must be converted into [{:var, y1} | [{:var, y2} | {:var, y3}]]
+    X = [Y | [Z | T]]
   end
 
   defcore pred45(X) do
