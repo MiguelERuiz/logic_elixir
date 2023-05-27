@@ -3,6 +3,7 @@ defmodule Unification do
     Documentation for Unification module
   """
   require Logger
+  require IEx
 
   #########
   # Types #
@@ -26,7 +27,10 @@ defmodule Unification do
   ##########
 
   defguardp is_tuple_term(t) when is_tuple(t) and (elem(t, 0) != :ground or is_tuple(elem(t, 1)))
-  defguardp is_list_term(t) when is_list(t) or (is_tuple(t) and (elem(t, 0) == :ground and is_list(elem(t, 1))))
+
+  defguardp is_list_term(t)
+            when is_list(t) or (is_tuple(t) and (elem(t, 0) == :ground and is_list(elem(t, 1))))
+
   defguardp belongs_to(theta, t) when is_map_key(theta, t)
 
   #############
@@ -60,9 +64,7 @@ defmodule Unification do
   end
 
   # [Orient] Rule
-  def unify(t1, {:var, _x} = t2, theta) do
-    unify(t2, t1, theta)
-  end
+  def unify(t1, {:var, _x} = t2, theta), do: unify(t2, t1, theta)
 
   # [Tuple] Rule
   def unify(t1, t2, theta) when is_tuple_term(t1) and is_tuple_term(t2) do
@@ -82,15 +84,13 @@ defmodule Unification do
   end
 
   def unify(t1, t2, theta) when is_list_term(t1) and is_list_term(t2) do
-    # Logger.info("t1: #{inspect(t1)}")
-    # Logger.info("t2: #{inspect(t2)}")
     c1 = components_of_list(t1)
-    # Logger.info("c1: #{inspect(c1)}")
     c2 = components_of_list(t2)
-    # Logger.info("c2: #{inspect(c2)}")
-    case length(c1) == length(c2) do
-      false -> :unmatch
-      true -> unify(c1, c2, theta)
+
+    case {c1, c2} do
+      {[], [_ | _]} -> :unmatch
+      {[_ | _], []} -> :unmatch
+      _ -> unify(c1, c2, theta)
     end
   end
 
@@ -116,36 +116,42 @@ defmodule Unification do
     vars(theta, c)
   end
 
-  defp vars(theta, t) when is_list(t) do
-    Enum.reduce(t, MapSet.new(), fn tx, acc -> MapSet.union(vars(theta, tx), acc) end)
+  defp vars(theta, []), do: MapSet.new(theta)
+
+  defp vars(theta, [h | t]) do
+    theta1 = vars(theta, h)
+    MapSet.union(theta1, vars(theta1, t))
   end
 
   @spec unify_variable(String.t(), t(), %{String.t() => t()}) :: %{String.t() => t()}
-  defp unify_variable(x, t, theta) do
-    apply_subtitutions(Map.put(theta, x, t))
-  end
+  defp unify_variable(x, t, theta), do: apply_subtitutions(Map.put(theta, x, t))
 
   @spec apply_subtitutions(%{String.t() => t()}) :: %{String.t() => t()}
-  defp apply_subtitutions(theta),
-    do: :maps.map(fn _, v -> apply_subtitution(theta, v) end, theta)
+  defp apply_subtitutions(theta) do
+    :maps.map(
+      fn _k, v ->
+        apply_subtitution(theta, v)
+      end,
+      theta
+    )
+  end
 
   @spec apply_subtitution(%{String.t() => t()}, t()) :: t()
   defp apply_subtitution(theta, {:var, x}) when belongs_to(theta, x), do: theta[x]
+
   defp apply_subtitution(_theta, {:var, x}), do: {:var, x}
+
   defp apply_subtitution(_theta, {:ground, t}), do: {:ground, t}
 
   defp apply_subtitution(theta, t) when is_tuple_term(t) do
-    c = components_of(t)
-    c1 = apply_subtitution(theta, c)
-
-    case c1 do
-      {:ground, l} -> {:ground, List.to_tuple(l)}
-      _ -> List.to_tuple(c1)
-    end
+    list = t |> Tuple.to_list() |> Enum.map(fn tx -> apply_subtitution(theta, tx) end)
+    TermBuilder.build_tuple(list)
   end
 
-  defp apply_subtitution(theta, t) when is_list(t) do
-    all_grounds(Enum.map(t, &apply_subtitution(theta, &1)))
+  defp apply_subtitution(theta, [h | t]) do
+    h_result = apply_subtitution(theta, h)
+    t_result = apply_subtitution(theta, t)
+    TermBuilder.build_list(h_result, t_result)
   end
 
   @spec components_of(tuple()) :: [term()]
@@ -153,18 +159,8 @@ defmodule Unification do
   defp components_of(t) when is_tuple(t), do: Tuple.to_list(t)
 
   @spec components_of_list(list() | ground_term()) :: [term()]
-  defp components_of_list({:ground, t}), do: t |> Enum.map(&{:ground, &1})
-  defp components_of_list(t) when is_list(t), do: t
-
-  @spec all_grounds([t()]) :: {:ground, [term()]} | [t()]
-  defp all_grounds(t) do
-    case Enum.all?(t, fn tx -> is_ground_term?(tx) end) do
-      true -> {:ground, Enum.map(t, fn {:ground, tx} -> tx end)}
-      false -> t
-    end
-  end
-
-  @spec is_ground_term?(t()) :: boolean()
-  defp is_ground_term?({:ground, _t}), do: true
-  defp is_ground_term?(_), do: false
+  def components_of_list([]), do: []
+  def components_of_list({:ground, []}), do: []
+  def components_of_list({:ground, [h | t]}), do: [{:ground, h}, {:ground, t}]
+  def components_of_list([h | t]), do: [h, t]
 end
