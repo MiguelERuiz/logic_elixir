@@ -3,6 +3,8 @@ defmodule LogicElixir do
   Documentation for `LogicElixir`.
   """
 
+  require Logger
+
   #########
   # Types #
   #########
@@ -23,13 +25,11 @@ defmodule LogicElixir do
 
   defmacro __before_compile__(env) do
     definitions = Module.get_attribute(env.module, :definitions)
-    for {name, args} <- definitions do# |> Enum.group_by(&elem(&1, 0), &elem(&1, 1)) do
-      quote do
-        defcore unquote(name)(X1, X2) do
-          unquote(Enum.at(args, 0)) = X1
-          unquote(Enum.at(args, 1)) = X2
-        end
-      end
+    grouped_definitions = definitions |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
+    Logger.info "definitions: #{inspect(definitions)}"
+    Logger.info "grouped_definitions: #{inspect(grouped_definitions)}"
+    for {name, args} <- definitions |> Enum.group_by(&elem(&1, 0), &elem(&1, 1)) do
+      generate_defcore(name, args)
     end
   end
 
@@ -46,6 +46,15 @@ defmodule LogicElixir do
   # Functions #
   #############
 
+  def generate_defcore(pred_name, pred_facts) do
+    case pred_facts do
+      # [] -> generate_defcore_magic_body
+      [fact] -> generate_defcore_simple_body(pred_name, fact)
+      # _ -> generate_defcore_choice_body(pred_name, pred_facts)
+      _ -> :ok
+    end
+  end
+
   ###############################
   #  Public auxiliar functions  #
   ###############################
@@ -56,4 +65,21 @@ defmodule LogicElixir do
   #####################
   # Private Functions #
   #####################
+
+  defp generate_defcore_simple_body(pred_name, pred_facts) do
+    defcore_args =
+      1..length(pred_facts)
+      |> Enum.map(fn x -> {:__aliases__, [], [String.to_atom(VarBuilder.gen_var)]} end)
+
+    quote do
+      defcore unquote({pred_name, [], defcore_args}) do
+        unquote({:__block__, [],
+                  pred_facts
+                  |> Enum.zip(defcore_args)
+                  |> Enum.map(fn {p, arg} -> quote do: unquote(p) = unquote(arg) end)
+                })
+        # TODO complete with potential patterns
+      end
+    end
+  end
 end
