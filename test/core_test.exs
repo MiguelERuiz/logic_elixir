@@ -10,6 +10,10 @@ defmodule CoreTest do
     :ok
   end
 
+  test "Checks pred" do
+    assert pred().(%{}) |> Enum.into([]) == [%{}]
+  end
+
   test "Checks pred1" do
     assert pred1({:var, "X"}).(%{}) |> Enum.into([]) == [%{"X" => {:ground, 5}}]
     assert pred1({:ground, 5}).(%{}) |> Enum.into([]) == [%{}]

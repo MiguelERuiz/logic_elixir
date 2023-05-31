@@ -24,6 +24,7 @@ defmodule LogicElixir do
   end
 
   defmacro __before_compile__(env) do
+    VarBuilder.start_link
     definitions = Module.get_attribute(env.module, :definitions)
     grouped_definitions = definitions |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
     Logger.info "definitions: #{inspect(definitions)}"
@@ -48,7 +49,7 @@ defmodule LogicElixir do
 
   def generate_defcore(pred_name, pred_facts) do
     case pred_facts do
-      # [] -> generate_defcore_magic_body
+      [] -> generate_defcore_simple_body(pred_name, pred_facts)
       [fact] -> generate_defcore_simple_body(pred_name, fact)
       # _ -> generate_defcore_choice_body(pred_name, pred_facts)
       _ -> :ok
@@ -66,10 +67,17 @@ defmodule LogicElixir do
   # Private Functions #
   #####################
 
+  defp generate_defcore_simple_body(pred_name, []) do
+    quote do
+      defcore unquote(pred_name)() do
+      end
+    end
+  end
+
   defp generate_defcore_simple_body(pred_name, pred_facts) do
     defcore_args =
       1..length(pred_facts)
-      |> Enum.map(fn x -> {:__aliases__, [], [String.to_atom(VarBuilder.gen_var)]} end)
+      |> Enum.map(fn _x -> {:__aliases__, [], [String.to_atom(VarBuilder.gen_var)]} end)
 
     quote do
       defcore unquote({pred_name, [], defcore_args}) do

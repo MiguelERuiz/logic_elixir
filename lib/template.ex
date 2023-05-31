@@ -1,6 +1,9 @@
 defmodule Template do
   use Core
 
+  defcore pred() do
+  end
+
   defcore pred1(X) do
     X = 5
   end

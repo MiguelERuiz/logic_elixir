@@ -1,13 +1,13 @@
 defmodule LogicTemplate do
   use LogicElixir
 
-  # defpred likes(:sussie, :pizza)
+  defpred likes(:sussie, :pizza)
 
-  # defpred likes(:sussie, :sushi)
+  defpred likes(:sussie, :sushi)
 
-  # defpred likes(:mike, :football)
+  defpred likes(:mike, :football)
 
-  # defpred likes(:tim, :rugby, 30)
+  defpred likes(:tim, :rugby, 30)
 
   # defpred age(:john, 50)
 
@@ -17,7 +17,7 @@ defmodule LogicTemplate do
 
   defpred father_of(:john, :paul)
 
-  # defpred father_of(john, mary)
+  # defpred father_of(:john, :mary)
 
   # defpred siblings(X, Y) do
   #   father_of(Z, X)
