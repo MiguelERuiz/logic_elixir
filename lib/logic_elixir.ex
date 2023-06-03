@@ -24,7 +24,7 @@ defmodule LogicElixir do
   end
 
   defmacro __before_compile__(env) do
-    VarBuilder.start_link
+    VarBuilder.start_link # TODO Replace by adding supervisor tree on library
     definitions = Module.get_attribute(env.module, :definitions)
     grouped_definitions = definitions |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
     Logger.info "definitions: #{inspect(definitions)}"
@@ -47,12 +47,33 @@ defmodule LogicElixir do
   # Functions #
   #############
 
+  def generate_defcore({:defpred, _defpred_metadata, [{pred_name, _metadata, defpred_args}]}) do
+    generate_defcore(pred_name, [defpred_args])
+  end
+
   def generate_defcore(pred_name, pred_facts) do
-    case pred_facts do
-      [] -> generate_defcore_simple_body(pred_name, pred_facts)
-      [fact] -> generate_defcore_simple_body(pred_name, fact)
-      # _ -> generate_defcore_choice_body(pred_name, pred_facts)
-      _ -> :ok
+    Logger.info "pred_name: #{inspect(pred_name)}"
+
+    {defcore_args, facts} =
+      case pred_facts do
+        [[]] -> {[], []}
+        [args] -> {1..length(args)
+                   |> Enum.map(fn _x -> {:__aliases__, [], [String.to_atom(VarBuilder.gen_var)]} end),
+                   args}
+        _ -> Logger.info "pred_facts: #{inspect(pred_facts)}"
+            {[], []}
+      end
+
+    quote do
+      defcore unquote(pred_name)(unquote_splicing(defcore_args)) do
+        # TODO replace this block with a choice block
+        unquote({:__block__, [],
+                  facts
+                  |> Enum.zip(defcore_args)
+                  |> Enum.map(fn {p, arg} -> quote do: unquote(p) = unquote(arg) end)
+                })
+        # TODO complete with potential goals
+      end
     end
   end
 
@@ -60,34 +81,7 @@ defmodule LogicElixir do
   #  Public auxiliar functions  #
   ###############################
 
-  def to_core(t) when is_tuple(t), do: t
-  def to_core(lit), do: {:ground, lit}
-
   #####################
   # Private Functions #
   #####################
-
-  defp generate_defcore_simple_body(pred_name, []) do
-    quote do
-      defcore unquote(pred_name)() do
-      end
-    end
-  end
-
-  defp generate_defcore_simple_body(pred_name, pred_facts) do
-    defcore_args =
-      1..length(pred_facts)
-      |> Enum.map(fn _x -> {:__aliases__, [], [String.to_atom(VarBuilder.gen_var)]} end)
-
-    quote do
-      defcore unquote({pred_name, [], defcore_args}) do
-        unquote({:__block__, [],
-                  pred_facts
-                  |> Enum.zip(defcore_args)
-                  |> Enum.map(fn {p, arg} -> quote do: unquote(p) = unquote(arg) end)
-                })
-        # TODO complete with potential patterns
-      end
-    end
-  end
 end

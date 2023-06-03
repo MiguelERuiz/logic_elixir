@@ -9,13 +9,15 @@ defmodule LogicTemplate do
 
   defpred likes(:tim, :rugby, 30)
 
-  # defpred age(:john, 50)
+  defpred age(:john, 50)
 
   # defpred age(:paul, 30)
 
   # defpred age(:mary, 20)
 
   defpred father_of(:john, :paul)
+
+  defpred sunny()
 
   # defpred father_of(:john, :mary)
 
