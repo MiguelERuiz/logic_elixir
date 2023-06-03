@@ -269,6 +269,17 @@ defmodule Template do
     [X | Y] = [1 | 2]
   end
 
+  defcore pred50(X) do
+    choice do
+      X = 1
+    end
+  end
+
+  defcore pred51() do
+    choice do
+    end
+  end
+
   defcore is_ordered(Xs) do
     choice do
       Xs = []

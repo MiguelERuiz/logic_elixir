@@ -441,6 +441,16 @@ defmodule CoreTest do
     assert pred49({:ground, 1}, {:ground, 7}).(%{}) |> Enum.into([]) == []
   end
 
+  test "Checks pred50" do
+    assert pred50({:var, "X"}).(%{}) |> Enum.into([]) == [%{"X" => {:ground, 1}}]
+    assert pred50({:ground, 1}).(%{}) |> Enum.into([]) == [%{}]
+    assert pred50({:ground, 5}).(%{}) |> Enum.into([]) == []
+  end
+
+  test "Checks pred51" do
+    assert pred51().(%{}) |> Enum.into([]) == [%{}]
+  end
+
   test "Checks is_ordered" do
     assert is_ordered({:ground, []}).(%{}) |> Enum.into([]) == [%{}]
     assert is_ordered({:ground, [1]}).(%{}) |> Enum.into([]) == [%{}]
