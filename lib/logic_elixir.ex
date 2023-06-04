@@ -23,6 +23,12 @@ defmodule LogicElixir do
     end
   end
 
+  defmacro defpred({name, _metadata, args}, do: do_block) do
+    quote do
+      Module.put_attribute(__MODULE__, :definitions, {unquote(name), unquote(args), unquote(do_block)})
+    end
+  end
+
   defmacro __before_compile__(env) do
     VarBuilder.start_link # TODO Replace by adding supervisor tree on library
     definitions = Module.get_attribute(env.module, :definitions)
@@ -34,12 +40,12 @@ defmodule LogicElixir do
     end
   end
 
-  defmacro __using__(_params) do
+  defmacro __using__(_options) do
     quote do
-      import LogicElixir, only: [defpred: 1]
-      import Core
+      import unquote(__MODULE__), only: :macros
+      use Core
       Module.register_attribute(__MODULE__, :definitions, accumulate: true)
-      @before_compile LogicElixir
+      @before_compile unquote(__MODULE__)
     end
   end
 
@@ -58,8 +64,8 @@ defmodule LogicElixir do
       case pred_facts do
         [[]] -> {[], []}
         [args] -> {1..length(args)
-                   |> Enum.map(fn _x -> {:__aliases__, [], [String.to_atom(VarBuilder.gen_var)]} end),
-                   args}
+                  |> Enum.map(fn _x -> {:__aliases__, [], [:"#{VarBuilder.gen_var}"]} end),
+                  args}
         _ -> Logger.info "pred_facts: #{inspect(pred_facts)}"
             {[], []}
       end

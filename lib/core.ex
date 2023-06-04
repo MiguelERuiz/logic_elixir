@@ -20,7 +20,7 @@ defmodule Core do
   # Macros #
   ##########
 
-  defmacro __using__(_params) do
+  defmacro __using__(_options) do
     quote do
       import Core
     end
