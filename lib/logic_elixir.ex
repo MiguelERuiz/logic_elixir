@@ -32,9 +32,6 @@ defmodule LogicElixir do
   defmacro __before_compile__(env) do
     VarBuilder.start_link # TODO Replace by adding supervisor tree on library
     definitions = Module.get_attribute(env.module, :definitions)
-    grouped_definitions = definitions |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
-    Logger.info "definitions: #{inspect(definitions)}"
-    Logger.info "grouped_definitions: #{inspect(grouped_definitions)}"
     for {name, args} <- definitions |> Enum.group_by(&elem(&1, 0), &elem(&1, 1)) do
       generate_defcore(name, args)
     end
@@ -73,11 +70,7 @@ defmodule LogicElixir do
     quote do
       defcore unquote(pred_name)(unquote_splicing(defcore_args)) do
         # TODO replace this block with a choice block
-        unquote({:__block__, [],
-                  facts
-                  |> Enum.zip(defcore_args)
-                  |> Enum.map(fn {p, arg} -> quote do: unquote(p) = unquote(arg) end)
-                })
+        unquote(choice_block(facts, defcore_args))
         # TODO complete with potential goals
       end
     end
@@ -90,4 +83,16 @@ defmodule LogicElixir do
   #####################
   # Private Functions #
   #####################
+  defp choice_block(facts, defcore_args) do
+    {:choice, [], [
+      [
+        do: {:__block__, [],
+              facts
+              |> Enum.zip(defcore_args)
+              |> Enum.map(fn {p, arg} -> quote do: unquote(p) = unquote(arg) end)
+        }
+      ]
+    ]
+    }
+  end
 end

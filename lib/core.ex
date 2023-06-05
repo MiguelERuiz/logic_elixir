@@ -22,7 +22,7 @@ defmodule Core do
 
   defmacro __using__(_options) do
     quote do
-      import Core
+      import unquote(__MODULE__)
     end
   end
 
