@@ -42,7 +42,7 @@ defmodule Utils do
 
     case ast do
       nil ->
-        Logger.error "(to_defcore) Error: no #{pred_name} function found on logic template"
+        Logger.error "(to_defcore) Error: no #{pred_name} predicate found on logic template"
       {:defpred, _metadata, _} ->
         ast |> LogicElixir.generate_defcore |> Macro.to_string |> IO.puts
     end
