@@ -2,7 +2,6 @@ defmodule LogicElixir do
   @moduledoc """
   Documentation for `LogicElixir`.
   """
-
   require Logger
 
   #########
@@ -30,7 +29,6 @@ defmodule LogicElixir do
   end
 
   defmacro __before_compile__(env) do
-    VarBuilder.start_link # TODO Replace by adding supervisor tree on library
     definitions = Module.get_attribute(env.module, :definitions)
     grouped_defs =  definitions |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
 

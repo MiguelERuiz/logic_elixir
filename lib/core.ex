@@ -39,7 +39,6 @@ defmodule Core do
   end
 
   def tr_def(predicate_name_node, do_block) do
-    # VarBuilder.start_link
     {predicate_name, _metadata, predicate_args} = predicate_name_node
 
     goals =
