@@ -32,7 +32,11 @@ defmodule LogicElixir do
   defmacro __before_compile__(env) do
     VarBuilder.start_link # TODO Replace by adding supervisor tree on library
     definitions = Module.get_attribute(env.module, :definitions)
-    for {name, args} <- definitions |> Enum.group_by(&elem(&1, 0), &elem(&1, 1)) do
+    grouped_defs =  definitions |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
+
+    Logger.info "definitions = #{inspect(definitions)}"
+    Logger.info "grouped_defs = #{inspect(grouped_defs)}"
+    for {name, args} <- grouped_defs do
       generate_defcore(name, args)
     end
   end
@@ -55,16 +59,17 @@ defmodule LogicElixir do
   end
 
   def generate_defcore(pred_name, pred_facts) do
-    Logger.info "pred_name: #{inspect(pred_name)}"
+    Logger.warn "GENERATE DEFCORE"
+    Logger.info "pred_name = #{inspect(pred_name)}"
+    Logger.info "pred_facts = #{inspect(pred_facts)}"
 
     {defcore_args, facts} =
       case pred_facts do
         [[]] -> {[], []}
-        [args] -> {1..length(args)
-                  |> Enum.map(fn _x -> {:__aliases__, [], [:"#{VarBuilder.gen_var}"]} end),
-                  args}
-        _ -> Logger.info "pred_facts: #{inspect(pred_facts)}"
-            {[], []}
+        [args] -> {gen_vars(args), args}
+        _ ->
+            [args0 | _] = pred_facts
+            {gen_vars(args0), pred_facts}
       end
 
     quote do
@@ -92,7 +97,13 @@ defmodule LogicElixir do
               |> Enum.map(fn {p, arg} -> quote do: unquote(p) = unquote(arg) end)
         }
       ]
-    ]
-    }
+    ]}
+  end
+
+  defp gen_vars([]), do: []
+
+  defp gen_vars(args) do
+    1..length(args)
+    |> Enum.map(fn _x -> {:__aliases__, [], [:"#{VarBuilder.gen_var}"]} end)
   end
 end
