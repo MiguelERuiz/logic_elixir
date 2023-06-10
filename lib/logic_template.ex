@@ -1,6 +1,7 @@
 defmodule LogicTemplate do
   use LogicElixir
 
+  # TODO now we are not going to support predicates with different number of args
   # defpred likes(:tim, :rugby, 30)
 
   defpred likes(:sussie, :pizza)
@@ -22,6 +23,10 @@ defmodule LogicTemplate do
   defpred sunny()
 
   defpred water_wets()
+
+  defpred is_funny(:painting)
+
+  defpred is_funny(:hiking)
 
   # defpred siblings(X, Y) do
   #   father_of(Z, X)

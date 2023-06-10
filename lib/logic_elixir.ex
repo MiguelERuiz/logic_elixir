@@ -4,6 +4,17 @@ defmodule LogicElixir do
   """
   require Logger
 
+  use Application
+
+  #########################
+  # Application callbacks #
+  #########################
+
+  @impl true
+  def start(_type, _args) do
+    LogicElixir.Supervisor.start_link(name: LogicElixir.Supervisor)
+  end
+
   #########
   # Types #
   #########
@@ -43,6 +54,10 @@ defmodule LogicElixir do
     quote do
       import unquote(__MODULE__), only: :macros
       use Core
+      # TODO On first `iex -S mix` command, this line is necessary,
+      # otherwise application crashes. Probably this is due to
+      # VarBuilder's Agent nature.
+      VarBuilder.start_link
       Module.register_attribute(__MODULE__, :definitions, accumulate: true)
       @before_compile unquote(__MODULE__)
     end
