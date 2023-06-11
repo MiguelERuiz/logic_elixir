@@ -4,6 +4,12 @@ defmodule LogicTemplate do
   # TODO now we are not going to support predicates with different number of args
   # defpred likes(:tim, :rugby, 30)
 
+  defpred person(:sussie)
+
+  defpred person(:mike)
+
+  defpred animal(:gladys)
+
   defpred likes(:sussie, :pizza)
 
   defpred likes(:sussie, :sushi)
@@ -19,6 +25,8 @@ defmodule LogicTemplate do
   defpred father_of(:john, :paul)
 
   defpred father_of(:john, :mary)
+
+  defpred boils(:water, 100)
 
   defpred sunny()
 
