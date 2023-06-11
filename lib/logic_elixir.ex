@@ -41,6 +41,11 @@ defmodule LogicElixir do
   end
 
   defmacro __before_compile__(env) do
+    # TODO On first `iex -S mix` command, this line is necessary,
+    # otherwise application crashes. Probably this is due to
+    # VarBuilder's Agent nature.
+    VarBuilder.start_link
+
     definitions = Module.get_attribute(env.module, :definitions)
     grouped_defs =  definitions |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
 
@@ -55,10 +60,6 @@ defmodule LogicElixir do
     quote do
       import unquote(__MODULE__), only: :macros
       use Core
-      # TODO On first `iex -S mix` command, this line is necessary,
-      # otherwise application crashes. Probably this is due to
-      # VarBuilder's Agent nature.
-      VarBuilder.start_link
       Module.register_attribute(__MODULE__, :definitions, accumulate: true)
       @before_compile unquote(__MODULE__)
     end
