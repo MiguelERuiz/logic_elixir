@@ -3,6 +3,7 @@ defmodule LogicElixir do
   Documentation for `LogicElixir`.
   """
   require Logger
+  require IEx
 
   use Application
 
@@ -67,10 +68,17 @@ defmodule LogicElixir do
   # Functions #
   #############
 
-  def generate_defcore({:defpred, _defpred_metadata, [{pred_name, _metadata, defpred_args}]}) do
+  def generate_defcore({:defpred, _defpred_metadata, [{pred_name, _metadata, []}]}) do
+    generate_defcore(pred_name, [[]])
+  end
+
+  def generate_defcore({:defpred, _defpred_metadata, [{pred_name, _metadata, defpred_args}]}) when is_list(defpred_args) and not is_list(hd(defpred_args)) do
     generate_defcore(pred_name, [defpred_args])
   end
 
+  def generate_defcore({:defpred, _defpred_metadata, [{pred_name, _metadata, defpred_args}]}) do
+    generate_defcore(pred_name, defpred_args)
+  end
 
   def generate_defcore(pred_name, pred_facts) do
     Logger.warn "GENERATE DEFCORE"
