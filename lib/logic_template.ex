@@ -36,14 +36,14 @@ defmodule LogicTemplate do
 
   defpred is_funny(:hiking)
 
-  # defpred siblings(X, Y) do
-  #   father_of(Z, X)
-  #   father_of(Z, Y)
-  # end
+  defpred siblings(X, Y) do
+    father_of(Z, X)
+    father_of(Z, Y)
+  end
 
   # defpred append([], Ys, Ys)
 
   # defpred append([X|Xs], Ys, [X|Zs]) do
-  #   append(Xs, Ys, Zs)
+  #   # append(Xs, Ys, Zs)
   # end
 end
