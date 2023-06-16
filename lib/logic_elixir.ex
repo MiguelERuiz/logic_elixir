@@ -36,16 +36,16 @@ defmodule LogicElixir do
   end
 
   defmacro defpred(head, body) do
-    Logger.warn "defpred with do block"
+    # Logger.warn "defpred with do block"
     {pred_name, args_ast} = Macro.decompose_call(head)
-    Logger.info "pred_name = #{inspect(pred_name)}"
-    Logger.info "args_ast = #{inspect(args_ast)}"
-    Logger.info "body = #{inspect(body)}"
-    Logger.info "do_block = #{inspect(body[:do])}"
-    Logger.info "caller_module = #{inspect(__CALLER__.module)}"
+    # Logger.info "pred_name = #{inspect(pred_name)}"
+    # Logger.info "args_ast = #{inspect(args_ast)}"
+    # Logger.info "body = #{inspect(body)}"
+    # Logger.info "do_block = #{inspect(body[:do])}"
+    # Logger.info "caller_module = #{inspect(__CALLER__.module)}"
     # Logger.info "caller_functions = #{inspect(__CALLER__.module.functions)}"
     quote do
-      do_block = Macro.expand(__ENV__, unquote(body[:do]))
+      do_block = unquote(Macro.escape(body[:do]))
       Module.put_attribute(__MODULE__, :definitions, {unquote(pred_name), {unquote(args_ast), do_block}})
     end
   end
@@ -59,8 +59,8 @@ defmodule LogicElixir do
     definitions = Module.get_attribute(env.module, :definitions)
     grouped_defs =  definitions |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
 
-    Logger.info "definitions = #{inspect(definitions)}"
-    Logger.info "grouped_defs = #{inspect(grouped_defs)}"
+    # Logger.info "definitions = #{inspect(definitions)}"
+    # Logger.info "grouped_defs = #{inspect(grouped_defs)}"
     # TODO change this 2-size tuple with a 3-size tuple that contains {name, args, do_block}
     for {name, args} <- grouped_defs do
       generate_defcore(name, args)
@@ -93,24 +93,28 @@ defmodule LogicElixir do
     generate_defcore(pred_name, defpred_args)
   end
 
+  def generate_defcore({:defpred, _defpred_metadata, [{pred_name, _metadata, defpred_args}, [do: do_block]]}) do
+    generate_defcore(pred_name, [{defpred_args, do_block}])
+  end
+
   def generate_defcore({:defpred, _defpred_metadata, [{pred_name, _metadata, defpred_args}, do_block]}) do
     generate_defcore(pred_name, [{defpred_args, do_block}])
   end
   # End Calls used by Utils.to_defcore/1
 
   def generate_defcore(pred_name, pred_facts) do
-    Logger.warn "GENERATE DEFCORE!!"
-    Logger.info "pred_name = #{inspect(pred_name)}"
-    Logger.info "pred_facts = #{inspect(pred_facts)}"
+    # Logger.warn "GENERATE DEFCORE!!"
+    # Logger.info "pred_name = #{inspect(pred_name)}"
+    # Logger.info "pred_facts = #{inspect(pred_facts)}"
 
     {defcore_args, facts} =
       case pred_facts do
         [[]] -> {[], []}
-        [{args, _do_block}] ->
+        [{args, _do_block} | _] ->
           {gen_vars(args), pred_facts}
         _ ->
-            [args0 | _] = pred_facts
-            {gen_vars(args0), pred_facts}
+          [args0 | _] = pred_facts
+          {gen_vars(args0), pred_facts}
       end
 
     quote do
@@ -128,9 +132,9 @@ defmodule LogicElixir do
   # Private Functions #
   #####################
   defp choice_block(facts_list, defcore_args) do
-    Logger.warn "CHOICE_BLOCK"
-    Logger.info "facts_list = #{inspect(facts_list)}"
-    Logger.info "defcore_args = #{inspect(defcore_args)}"
+    # Logger.warn "CHOICE_BLOCK"
+    # Logger.info "facts_list = #{inspect(facts_list)}"
+    # Logger.info "defcore_args = #{inspect(defcore_args)}"
     choice_stmts = facts_list |> Enum.map(&choice_stmt(&1, defcore_args))
     choice_block = case choice_stmts do
       [] -> [do: {:__block__, [], []}]
@@ -145,11 +149,13 @@ defmodule LogicElixir do
     ]
   end
 
-  defp choice_stmt({facts, [do: do_block]}, defcore_args) do
+  defp choice_stmt({facts, do_block}, defcore_args) do
+    # Logger.warn "CHOICE STMT"
+    # Logger.info "do_block = #{inspect(do_block)}"
     {:__block__, [],
               List.flatten([facts
               |> Enum.zip(defcore_args)
-              |> Enum.map(fn {p, arg} -> quote do: unquote(p) = unquote(arg) end), []])
+              |> Enum.map(fn {p, arg} -> quote do: unquote(p) = unquote(arg) end), process_block(do_block)])
     }
   end
 
@@ -164,8 +170,16 @@ defmodule LogicElixir do
     }
   end
 
-  defp process_block(do_block) do
-    quote do: unquote(do_block)
+  defp process_block({:__block__, _metadata, stmt_block}) do
+    # Logger.warn "PROCESS BLOCK"
+    # Logger.info "do_block = #{inspect(do_block)}"
+    stmt_block
+  end
+
+  defp process_block(stmt) do
+    # Logger.warn "PROCESS BLOCK OTHERWISE"
+    # Logger.info "stmt = #{inspect(stmt)}"
+    [stmt]
   end
 
   defp gen_vars([]), do: []
