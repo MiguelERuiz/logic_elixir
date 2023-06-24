@@ -1,5 +1,5 @@
 defmodule Template do
-  use Core
+  use LogicElixir.Defcore
 
   defcore pred() do
   end

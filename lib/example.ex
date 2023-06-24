@@ -1,10 +1,10 @@
 defmodule Example do
-  import Core
-  # import TermBuilder
+  import LogicElixir.Defcore
+  # import LogicElixir.TermBuilder
   require Logger
 
   def pred1(t1) do
-    x1 = VarBuilder.gen_var()
+    x1 = LogicElixir.VarBuilder.gen_var()
     nil
 
     fn th1 ->
@@ -20,8 +20,8 @@ defmodule Example do
 
   def pred2(t1, t2) do
     (
-      x1 = VarBuilder.gen_var()
-      x2 = VarBuilder.gen_var()
+      x1 = LogicElixir.VarBuilder.gen_var()
+      x2 = LogicElixir.VarBuilder.gen_var()
     )
 
     nil
@@ -44,11 +44,11 @@ defmodule Example do
 
   def pred3(t1, t2) do
     (
-      x1 = VarBuilder.gen_var()
-      x2 = VarBuilder.gen_var()
+      x1 = LogicElixir.VarBuilder.gen_var()
+      x2 = LogicElixir.VarBuilder.gen_var()
     )
 
-    y1 = VarBuilder.gen_var()
+    y1 = LogicElixir.VarBuilder.gen_var()
 
     fn th1 ->
       th2 = Map.merge(th1, Map.new([{x1, t1}, {x2, t2}]))
@@ -67,8 +67,8 @@ defmodule Example do
   end
 
   def pred4(t1) do
-    x1 = VarBuilder.gen_var()
-    y1 = VarBuilder.gen_var()
+    x1 = LogicElixir.VarBuilder.gen_var()
+    y1 = LogicElixir.VarBuilder.gen_var()
 
     fn th1 ->
       th2 = Map.merge(th1, Map.new([{x1, t1}]))
@@ -83,7 +83,7 @@ defmodule Example do
 
   def pred5 do
     nil
-    y1 = VarBuilder.gen_var()
+    y1 = LogicElixir.VarBuilder.gen_var()
 
     fn th1 ->
       th2 = Map.merge(th1, Map.new([]))
@@ -97,7 +97,7 @@ defmodule Example do
   end
 
   def pred6(t1) do
-    x1 = VarBuilder.gen_var()
+    x1 = LogicElixir.VarBuilder.gen_var()
     nil
 
     fn th1 ->
@@ -124,7 +124,7 @@ defmodule Example do
   end
 
   def pred7(t1) do
-    x1 = VarBuilder.gen_var()
+    x1 = LogicElixir.VarBuilder.gen_var()
     nil
 
     fn th1 ->
@@ -156,8 +156,8 @@ defmodule Example do
 
   def pred8(t1, t2) do
     (
-      x1 = VarBuilder.gen_var()
-      x2 = VarBuilder.gen_var()
+      x1 = LogicElixir.VarBuilder.gen_var()
+      x2 = LogicElixir.VarBuilder.gen_var()
     )
 
     nil
@@ -192,8 +192,8 @@ defmodule Example do
 
   def pred9(t1, t2) do
     (
-      x1 = VarBuilder.gen_var()
-      x2 = VarBuilder.gen_var()
+      x1 = LogicElixir.VarBuilder.gen_var()
+      x2 = LogicElixir.VarBuilder.gen_var()
     )
 
     nil
@@ -235,9 +235,9 @@ defmodule Example do
     nil
 
     (
-      y1 = VarBuilder.gen_var()
-      y2 = VarBuilder.gen_var()
-      y3 = VarBuilder.gen_var()
+      y1 = LogicElixir.VarBuilder.gen_var()
+      y2 = LogicElixir.VarBuilder.gen_var()
+      y3 = LogicElixir.VarBuilder.gen_var()
     )
 
     fn th1 ->
@@ -252,11 +252,11 @@ defmodule Example do
   end
 
   def pred110(t1) do
-    x1 = VarBuilder.gen_var()
+    x1 = LogicElixir.VarBuilder.gen_var()
 
     (
-      y1 = VarBuilder.gen_var()
-      y2 = VarBuilder.gen_var()
+      y1 = LogicElixir.VarBuilder.gen_var()
+      y2 = LogicElixir.VarBuilder.gen_var()
     )
 
     fn th1 ->
@@ -286,7 +286,7 @@ defmodule Example do
   end
 
   def pred13(t1) do
-    x1 = VarBuilder.gen_var()
+    x1 = LogicElixir.VarBuilder.gen_var()
     nil
 
     fn th1 ->
@@ -301,11 +301,11 @@ defmodule Example do
   end
 
   def pred14(t1) do
-    x1 = VarBuilder.gen_var()
+    x1 = LogicElixir.VarBuilder.gen_var()
 
     (
-      y1 = VarBuilder.gen_var()
-      y2 = VarBuilder.gen_var()
+      y1 = LogicElixir.VarBuilder.gen_var()
+      y2 = LogicElixir.VarBuilder.gen_var()
     )
 
     fn th1 ->
@@ -343,12 +343,12 @@ defmodule Example do
   end
 
   def pred140(t1) do
-    x1 = VarBuilder.gen_var()
+    x1 = LogicElixir.VarBuilder.gen_var()
 
     (
-      y1 = VarBuilder.gen_var()
-      y2 = VarBuilder.gen_var()
-      y3 = VarBuilder.gen_var()
+      y1 = LogicElixir.VarBuilder.gen_var()
+      y2 = LogicElixir.VarBuilder.gen_var()
+      y3 = LogicElixir.VarBuilder.gen_var()
     )
 
     fn th1 ->
@@ -402,7 +402,7 @@ defmodule Example do
 
   def pred15 do
     nil
-    y1 = VarBuilder.gen_var()
+    y1 = LogicElixir.VarBuilder.gen_var()
 
     fn th1 ->
       th2 = Map.merge(th1, Map.new([]))
@@ -417,8 +417,8 @@ defmodule Example do
 
   def pred16(t1, t2) do
     (
-      x1 = VarBuilder.gen_var()
-      x2 = VarBuilder.gen_var()
+      x1 = LogicElixir.VarBuilder.gen_var()
+      x2 = LogicElixir.VarBuilder.gen_var()
     )
 
     nil
@@ -430,8 +430,8 @@ defmodule Example do
          (fn th ->
             unify_gen(
               th,
-              TermBuilder.build_tuple(var: x1, var: x2),
-              TermBuilder.build_tuple(ground: 1, ground: 2)
+              LogicElixir.TermBuilder.build_tuple(var: x1, var: x2),
+              LogicElixir.TermBuilder.build_tuple(ground: 1, ground: 2)
             )
           end).(th1)
          |> Stream.flat_map(fn th2 -> (fn th -> [th] end).(th2) end)
@@ -442,13 +442,13 @@ defmodule Example do
 
   def pred17(t1, t2) do
     (
-      x1 = VarBuilder.gen_var()
-      x2 = VarBuilder.gen_var()
+      x1 = LogicElixir.VarBuilder.gen_var()
+      x2 = LogicElixir.VarBuilder.gen_var()
     )
 
     (
-      y1 = VarBuilder.gen_var()
-      y2 = VarBuilder.gen_var()
+      y1 = LogicElixir.VarBuilder.gen_var()
+      y2 = LogicElixir.VarBuilder.gen_var()
     )
 
     fn th1 ->
@@ -458,8 +458,8 @@ defmodule Example do
          (fn th ->
             unify_gen(
               th,
-              TermBuilder.build_tuple(var: y1, var: y2),
-              TermBuilder.build_tuple(var: x1, var: x2)
+              LogicElixir.TermBuilder.build_tuple(var: y1, var: y2),
+              LogicElixir.TermBuilder.build_tuple(var: x1, var: x2)
             )
           end).(th1)
          |> Stream.flat_map(fn th2 -> (fn th -> [th] end).(th2) end)
@@ -470,8 +470,8 @@ defmodule Example do
 
   def pred18(t1, t2) do
     (
-      x1 = VarBuilder.gen_var()
-      x2 = VarBuilder.gen_var()
+      x1 = LogicElixir.VarBuilder.gen_var()
+      x2 = LogicElixir.VarBuilder.gen_var()
     )
 
     nil
@@ -486,8 +486,8 @@ defmodule Example do
                 (fn th ->
                    unify_gen(
                      th,
-                     TermBuilder.build_tuple(var: x1, var: x2),
-                     TermBuilder.build_tuple(ground: 1, ground: 3)
+                     LogicElixir.TermBuilder.build_tuple(var: x1, var: x2),
+                     LogicElixir.TermBuilder.build_tuple(ground: 1, ground: 3)
                    )
                  end).(th1)
                 |> Stream.flat_map(fn th2 -> (fn th -> [th] end).(th2) end)
@@ -496,8 +496,8 @@ defmodule Example do
                 (fn th ->
                    unify_gen(
                      th,
-                     TermBuilder.build_tuple(var: x1, var: x2),
-                     TermBuilder.build_tuple(ground: 2, ground: 4)
+                     LogicElixir.TermBuilder.build_tuple(var: x1, var: x2),
+                     LogicElixir.TermBuilder.build_tuple(ground: 2, ground: 4)
                    )
                  end).(th1)
                 |> Stream.flat_map(fn th2 -> (fn th -> [th] end).(th2) end)
@@ -513,7 +513,7 @@ defmodule Example do
 
   def pred19() do
     nil
-    y1 = VarBuilder.gen_var()
+    y1 = LogicElixir.VarBuilder.gen_var()
 
     fn th1 ->
       th2 = Map.merge(th1, Map.new([]))
@@ -527,18 +527,18 @@ defmodule Example do
   end
 
   def pred20(t1) do
-    x1 = VarBuilder.gen_var()
+    x1 = LogicElixir.VarBuilder.gen_var()
 
     (
-      y1 = VarBuilder.gen_var()
-      y2 = VarBuilder.gen_var()
+      y1 = LogicElixir.VarBuilder.gen_var()
+      y2 = LogicElixir.VarBuilder.gen_var()
     )
 
     fn th1 ->
       th2 = Map.merge(th1, Map.new([{x1, t1}]))
 
       (fn th1 ->
-         (fn th -> unify_gen(th, {:var, x1}, TermBuilder.build_tuple(var: y1, var: y2)) end).(th1)
+         (fn th -> unify_gen(th, {:var, x1}, LogicElixir.TermBuilder.build_tuple(var: y1, var: y2)) end).(th1)
          |> Stream.flat_map(fn th2 -> (fn th -> [th] end).(th2) end)
        end).(th2)
       |> Stream.map(&Map.drop(&1, [x1, y1, y2]))
@@ -546,7 +546,7 @@ defmodule Example do
   end
 
   def pred21(t1) do
-    x1 = VarBuilder.gen_var()
+    x1 = LogicElixir.VarBuilder.gen_var()
     nil
 
     fn th1 ->
@@ -557,9 +557,9 @@ defmodule Example do
             unify_gen(
               th,
               {:var, x1},
-              TermBuilder.build_list(
+              LogicElixir.TermBuilder.build_list(
                 {:ground, 1},
-                TermBuilder.build_list({:ground, 2}, TermBuilder.build_list({:ground, 3}, []))
+                LogicElixir.TermBuilder.build_list({:ground, 2}, LogicElixir.TermBuilder.build_list({:ground, 3}, []))
               )
             )
           end).(th1)
@@ -571,9 +571,9 @@ defmodule Example do
 
   def pred22(t1, t2, t3) do
     (
-      x1 = VarBuilder.gen_var()
-      x2 = VarBuilder.gen_var()
-      x3 = VarBuilder.gen_var()
+      x1 = LogicElixir.VarBuilder.gen_var()
+      x2 = LogicElixir.VarBuilder.gen_var()
+      x3 = LogicElixir.VarBuilder.gen_var()
     )
 
     nil
@@ -585,13 +585,13 @@ defmodule Example do
          (fn th ->
             unify_gen(
               th,
-              TermBuilder.build_list(
+              LogicElixir.TermBuilder.build_list(
                 {:var, x1},
-                TermBuilder.build_list({:var, x2}, TermBuilder.build_list({:var, x3}, []))
+                LogicElixir.TermBuilder.build_list({:var, x2}, LogicElixir.TermBuilder.build_list({:var, x3}, []))
               ),
-              TermBuilder.build_list(
+              LogicElixir.TermBuilder.build_list(
                 {:ground, 1},
-                TermBuilder.build_list({:ground, 2}, TermBuilder.build_list({:ground, 3}, []))
+                LogicElixir.TermBuilder.build_list({:ground, 2}, LogicElixir.TermBuilder.build_list({:ground, 3}, []))
               )
             )
           end).(th1)
@@ -605,9 +605,9 @@ defmodule Example do
     nil
 
     (
-      y1 = VarBuilder.gen_var()
-      y2 = VarBuilder.gen_var()
-      y3 = VarBuilder.gen_var()
+      y1 = LogicElixir.VarBuilder.gen_var()
+      y2 = LogicElixir.VarBuilder.gen_var()
+      y3 = LogicElixir.VarBuilder.gen_var()
     )
 
     fn th1 ->
@@ -617,13 +617,13 @@ defmodule Example do
          (fn th ->
             unify_gen(
               th,
-              TermBuilder.build_list(
+              LogicElixir.TermBuilder.build_list(
                 {:var, y1},
-                TermBuilder.build_list({:var, y2}, TermBuilder.build_list({:var, y3}, []))
+                LogicElixir.TermBuilder.build_list({:var, y2}, LogicElixir.TermBuilder.build_list({:var, y3}, []))
               ),
-              TermBuilder.build_list(
+              LogicElixir.TermBuilder.build_list(
                 {:ground, 1},
-                TermBuilder.build_list({:ground, 2}, TermBuilder.build_list({:ground, 3}, []))
+                LogicElixir.TermBuilder.build_list({:ground, 2}, LogicElixir.TermBuilder.build_list({:ground, 3}, []))
               )
             )
           end).(th1)
@@ -635,9 +635,9 @@ defmodule Example do
 
   def pred24(t1, t2, t3) do
     (
-      x1 = VarBuilder.gen_var()
-      x2 = VarBuilder.gen_var()
-      x3 = VarBuilder.gen_var()
+      x1 = LogicElixir.VarBuilder.gen_var()
+      x2 = LogicElixir.VarBuilder.gen_var()
+      x3 = LogicElixir.VarBuilder.gen_var()
     )
 
     nil
@@ -660,7 +660,7 @@ defmodule Example do
   end
 
   def pred25(t1) do
-    x1 = VarBuilder.gen_var()
+    x1 = LogicElixir.VarBuilder.gen_var()
     nil
 
     fn th1 ->
@@ -671,10 +671,10 @@ defmodule Example do
             unify_gen(
               th,
               {:var, x1},
-              TermBuilder.build_list(
-                TermBuilder.build_list(
+              LogicElixir.TermBuilder.build_list(
+                LogicElixir.TermBuilder.build_list(
                   {:ground, 1},
-                  TermBuilder.build_list({:ground, 2}, TermBuilder.build_list({:ground, 3}, []))
+                  LogicElixir.TermBuilder.build_list({:ground, 2}, LogicElixir.TermBuilder.build_list({:ground, 3}, []))
                 ),
                 []
               )
@@ -732,7 +732,7 @@ defmodule Example do
   end
 
   def pred28(t1) do
-    x1 = VarBuilder.gen_var()
+    x1 = LogicElixir.VarBuilder.gen_var()
     nil
 
     fn th1 ->
@@ -767,7 +767,7 @@ defmodule Example do
   end
 
   def pred29(t1) do
-    x1 = VarBuilder.gen_var()
+    x1 = LogicElixir.VarBuilder.gen_var()
     nil
 
     fn th1 ->
@@ -778,7 +778,7 @@ defmodule Example do
             unify_gen(
               th,
               {:var, x1},
-              TermBuilder.build_list(TermBuilder.build_list({:ground, 1}, []), [])
+              LogicElixir.TermBuilder.build_list(LogicElixir.TermBuilder.build_list({:ground, 1}, []), [])
             )
           end).(th1)
          |> Stream.flat_map(fn th2 -> (fn th -> [th] end).(th2) end)
@@ -788,14 +788,14 @@ defmodule Example do
   end
 
   def pred291(t1) do
-    x1 = VarBuilder.gen_var()
+    x1 = LogicElixir.VarBuilder.gen_var()
     nil
 
     fn th1 ->
       th2 = Map.merge(th1, Map.new([{x1, t1}]))
 
       (fn th1 ->
-         (fn th -> unify_gen(th, {:var, x1}, TermBuilder.build_list([ground: 1], [])) end).(th1)
+         (fn th -> unify_gen(th, {:var, x1}, LogicElixir.TermBuilder.build_list([ground: 1], [])) end).(th1)
          |> Stream.flat_map(fn th2 -> (fn th -> [th] end).(th2) end)
        end).(th2)
       |> Stream.map(&Map.drop(&1, [x1]))
@@ -803,7 +803,7 @@ defmodule Example do
   end
 
   def pred292(t1) do
-    x1 = VarBuilder.gen_var()
+    x1 = LogicElixir.VarBuilder.gen_var()
     nil
 
     fn th1 ->
@@ -818,7 +818,7 @@ defmodule Example do
   end
 
   def pred30(t1) do
-    x1 = VarBuilder.gen_var()
+    x1 = LogicElixir.VarBuilder.gen_var()
     nil
 
     fn th1 ->
@@ -833,7 +833,7 @@ defmodule Example do
   end
 
   def pred301(t1) do
-    x1 = VarBuilder.gen_var()
+    x1 = LogicElixir.VarBuilder.gen_var()
     nil
 
     fn th1 ->
@@ -848,7 +848,7 @@ defmodule Example do
   end
 
   def pred302(t1) do
-    x1 = VarBuilder.gen_var()
+    x1 = LogicElixir.VarBuilder.gen_var()
     nil
 
     fn th1 ->
@@ -864,8 +864,8 @@ defmodule Example do
 
   def pred31(t1, t2) do
     (
-      x1 = VarBuilder.gen_var()
-      x2 = VarBuilder.gen_var()
+      x1 = LogicElixir.VarBuilder.gen_var()
+      x2 = LogicElixir.VarBuilder.gen_var()
     )
 
     nil
@@ -888,8 +888,8 @@ defmodule Example do
 
   def pred311(t1, t2) do
     (
-      x1 = VarBuilder.gen_var()
-      x2 = VarBuilder.gen_var()
+      x1 = LogicElixir.VarBuilder.gen_var()
+      x2 = LogicElixir.VarBuilder.gen_var()
     )
 
     nil
@@ -911,12 +911,12 @@ defmodule Example do
   end
 
   def pred33(t1) do
-    x1 = VarBuilder.gen_var()
+    x1 = LogicElixir.VarBuilder.gen_var()
 
     (
-      y1 = VarBuilder.gen_var()
-      y2 = VarBuilder.gen_var()
-      y3 = VarBuilder.gen_var()
+      y1 = LogicElixir.VarBuilder.gen_var()
+      y2 = LogicElixir.VarBuilder.gen_var()
+      y3 = LogicElixir.VarBuilder.gen_var()
     )
 
     fn th1 ->
@@ -931,12 +931,12 @@ defmodule Example do
   end
 
   def pred40(t1) do
-    x1 = VarBuilder.gen_var()
+    x1 = LogicElixir.VarBuilder.gen_var()
 
     (
-      y1 = VarBuilder.gen_var()
-      y2 = VarBuilder.gen_var()
-      y3 = VarBuilder.gen_var()
+      y1 = LogicElixir.VarBuilder.gen_var()
+      y2 = LogicElixir.VarBuilder.gen_var()
+      y3 = LogicElixir.VarBuilder.gen_var()
     )
 
     fn th1 ->
@@ -969,12 +969,12 @@ defmodule Example do
   end
 
   def pred401(t1) do
-    x1 = VarBuilder.gen_var()
+    x1 = LogicElixir.VarBuilder.gen_var()
 
     (
-      y1 = VarBuilder.gen_var()
-      y2 = VarBuilder.gen_var()
-      y3 = VarBuilder.gen_var()
+      y1 = LogicElixir.VarBuilder.gen_var()
+      y2 = LogicElixir.VarBuilder.gen_var()
+      y3 = LogicElixir.VarBuilder.gen_var()
     )
 
     fn th1 ->
@@ -1012,7 +1012,7 @@ defmodule Example do
   end
 
   def pred402(t1) do
-    x1 = VarBuilder.gen_var()
+    x1 = LogicElixir.VarBuilder.gen_var()
     nil
 
     fn th1 ->
@@ -1049,7 +1049,7 @@ defmodule Example do
 
   def pred41() do
     nil
-    y1 = VarBuilder.gen_var()
+    y1 = LogicElixir.VarBuilder.gen_var()
 
     fn th1 ->
       th2 = Map.merge(th1, Map.new([]))
@@ -1063,12 +1063,12 @@ defmodule Example do
   end
 
   def is_ordered(t1) do
-    x1 = VarBuilder.gen_var()
+    x1 = LogicElixir.VarBuilder.gen_var()
 
     (
-      y1 = VarBuilder.gen_var()
-      y2 = VarBuilder.gen_var()
-      y3 = VarBuilder.gen_var()
+      y1 = LogicElixir.VarBuilder.gen_var()
+      y2 = LogicElixir.VarBuilder.gen_var()
+      y3 = LogicElixir.VarBuilder.gen_var()
     )
 
     fn th1 ->
@@ -1127,15 +1127,15 @@ defmodule Example do
 
   def append(t1, t2, t3) do
     (
-      x1 = VarBuilder.gen_var()
-      x2 = VarBuilder.gen_var()
-      x3 = VarBuilder.gen_var()
+      x1 = LogicElixir.VarBuilder.gen_var()
+      x2 = LogicElixir.VarBuilder.gen_var()
+      x3 = LogicElixir.VarBuilder.gen_var()
     )
 
     (
-      y1 = VarBuilder.gen_var()
-      y2 = VarBuilder.gen_var()
-      y3 = VarBuilder.gen_var()
+      y1 = LogicElixir.VarBuilder.gen_var()
+      y2 = LogicElixir.VarBuilder.gen_var()
+      y3 = LogicElixir.VarBuilder.gen_var()
     )
 
     fn th1 ->

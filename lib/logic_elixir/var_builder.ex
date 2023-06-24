@@ -1,4 +1,4 @@
-defmodule VarBuilder do
+defmodule LogicElixir.VarBuilder do
   @moduledoc """
     Simple agent to create temporary variables to make easier the
     transformation from core expressions to Elixir expressions
