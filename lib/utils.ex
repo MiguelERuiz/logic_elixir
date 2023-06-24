@@ -2,20 +2,21 @@ defmodule Utils do
   require Logger
 
   @spec get_ast(atom()) :: nil | tuple()
-  def get_ast(pred_name) do
-    {:ok, ast_template} = load_template()
+  def get_ast(pred_name, template_file \\ "lib/template.ex") do
+    {:ok, ast_template} = load_template(template_file)
     {_defmodule, _metadata_module, body} = ast_template
     [_template, [do: {:__block__, [], inner_body}]] = body
     [_use | lines] = inner_body
 
     ast =
       lines
-      |> Enum.find(fn {_operator, _metadata_defcore, [{defcore_fun, _metadata_fun, _args} | _]} ->
+      |> Enum.filter(fn {_operator, _metadata_defcore, [{defcore_fun, _metadata_fun, _args} | _]} ->
         defcore_fun == pred_name
       end)
 
     case ast do
-      nil -> nil
+      [] -> nil
+      [result] -> result
       _ -> ast
     end
   end
@@ -36,9 +37,31 @@ defmodule Utils do
     end
   end
 
-  @spec load_template() :: {:ok, tuple()}
-  defp load_template do
-    "lib/template.ex"
+  @spec to_defcore(atom()) :: :ok
+  def to_defcore(pred_name) do
+    ast = get_ast(pred_name, "lib/logic_template.ex")
+
+    case ast do
+      nil ->
+        Logger.error "(to_defcore) Error: no #{pred_name} predicate found on logic template"
+      {:defpred, _metadata, _} ->
+        ast |> LogicElixir.generate_defcore |> Macro.to_string |> IO.puts
+      _ ->
+        joint_args = ast
+        |> Enum.map(
+            fn {:defpred, _metadata, [{_pred_name, _metadata_pred_name, args}]} ->
+              args
+            end)
+        {:defpred, [], [{pred_name, [], joint_args}]}
+        |> LogicElixir.generate_defcore
+        |> Macro.to_string
+        |> IO.puts
+    end
+  end
+
+  @spec load_template(binary()) :: {:ok, tuple()}
+  defp load_template(template_file) do
+    template_file
     |> File.read!()
     |> Code.string_to_quoted()
   end

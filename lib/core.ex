@@ -20,9 +20,9 @@ defmodule Core do
   # Macros #
   ##########
 
-  defmacro __using__(_params) do
+  defmacro __using__(_options) do
     quote do
-      import Core
+      import unquote(__MODULE__)
     end
   end
 
@@ -39,7 +39,6 @@ defmodule Core do
   end
 
   def tr_def(predicate_name_node, do_block) do
-    # VarBuilder.start_link
     {predicate_name, _metadata, predicate_args} = predicate_name_node
 
     goals =
@@ -334,14 +333,13 @@ defmodule Core do
     [t1, ts]
   end
 
-  defp choice_vars([{:do, do_block}, {:else, else_block} | rest]) do
+  defp choice_vars([{:do, do_block} | rest]) do
     do_block_vars = vars_in_goal(do_block)
-    else_block_vars = vars_in_goal(else_block)
 
     result =
       case rest do
         [] ->
-          [do_block_vars, else_block_vars]
+          [do_block_vars]
 
         _ ->
           rest_block_vars =
@@ -350,7 +348,7 @@ defmodule Core do
               vars_in_goal(extra_else_block)
             end)
 
-          [do_block_vars, else_block_vars, rest_block_vars]
+          [do_block_vars, rest_block_vars]
       end
 
     result

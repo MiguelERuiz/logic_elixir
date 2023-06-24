@@ -1,6 +1,9 @@
 defmodule Template do
   use Core
 
+  defcore pred() do
+  end
+
   defcore pred1(X) do
     X = 5
   end
@@ -264,6 +267,17 @@ defmodule Template do
 
   defcore pred49(X, Y) do
     [X | Y] = [1 | 2]
+  end
+
+  defcore pred50(X) do
+    choice do
+      X = 1
+    end
+  end
+
+  defcore pred51() do
+    choice do
+    end
   end
 
   defcore is_ordered(Xs) do
