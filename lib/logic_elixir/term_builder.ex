@@ -4,7 +4,7 @@ defmodule LogicElixir.TermBuilder do
       {:ground,
        terms
        |> Enum.map(fn {:ground, t} -> t end)
-       |> List.to_tuple}
+       |> List.to_tuple()}
     else
       List.to_tuple(terms)
     end

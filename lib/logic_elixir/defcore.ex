@@ -200,7 +200,7 @@ defmodule LogicElixir.Defcore do
           |> Enum.into(%{})
       end
 
-    xs = x_args |> Map.keys
+    xs = x_args |> Map.keys()
 
     quote do
       unquote(
@@ -231,7 +231,7 @@ defmodule LogicElixir.Defcore do
 
   # This matches tuples with size == 2
   def tr_term(delta, x, tuple) when is_tuple(tuple) do
-    list = tuple |> Tuple.to_list |> Enum.map(fn tx -> tr_term(delta, x, tx) end)
+    list = tuple |> Tuple.to_list() |> Enum.map(fn tx -> tr_term(delta, x, tx) end)
     quote do: unquote(LogicElixir.TermBuilder.build_tuple(list))
   end
 
@@ -267,9 +267,9 @@ defmodule LogicElixir.Defcore do
 
   def groundify(theta, t) when is_tuple(t) do
     t
-    |> Tuple.to_list
+    |> Tuple.to_list()
     |> Enum.map(&groundify(theta, &1))
-    |> List.to_tuple
+    |> List.to_tuple()
   end
 
   def groundify(theta, [t1 | t2]) do
@@ -283,10 +283,10 @@ defmodule LogicElixir.Defcore do
   defp vars(goals) when is_list(goals) do
     goals
     |> Enum.map(fn goal -> vars_in_goal(goal) end)
-    |> List.flatten
+    |> List.flatten()
     |> Enum.filter(fn arg -> is_logic_variable?(arg) end)
     |> Enum.map(fn {:__aliases__, _metadata, [logic_variable]} -> logic_variable end)
-    |> Enum.uniq
+    |> Enum.uniq()
   end
 
   defp vars_in_goal({:=, _metadata, [t1, t2]}) do
