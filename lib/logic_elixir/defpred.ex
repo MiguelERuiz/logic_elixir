@@ -23,7 +23,7 @@ defmodule LogicElixir.Defpred do
     Module.put_attribute(__CALLER__.module, :definitions, {pred_name, args_ast})
   end
 
-  defmacro defpred(head, [do: block]) do
+  defmacro defpred(head, do: block) do
     {pred_name, args_ast} = Macro.decompose_call(head)
     Module.put_attribute(__CALLER__.module, :definitions, {pred_name, {args_ast, block}})
   end
@@ -32,10 +32,10 @@ defmodule LogicElixir.Defpred do
     # TODO On first `iex -S mix` command, this line is necessary,
     # otherwise application crashes. Probably this is due to
     # LogicElixir.VarBuilder's Agent nature.
-    LogicElixir.VarBuilder.start_link
+    LogicElixir.VarBuilder.start_link()
 
     definitions = Module.get_attribute(env.module, :definitions)
-    grouped_defs =  definitions |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
+    grouped_defs = definitions |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
 
     # Logger.info "definitions = #{inspect(definitions)}"
     # Logger.info "grouped_defs = #{inspect(grouped_defs)}"
@@ -46,6 +46,7 @@ defmodule LogicElixir.Defpred do
 
   defmacro __using__(_options) do
     Module.register_attribute(__CALLER__.module, :definitions, accumulate: true)
+
     quote do
       import unquote(__MODULE__), only: :macros
       use LogicElixir.Defcore
@@ -62,7 +63,8 @@ defmodule LogicElixir.Defpred do
     generate_defcore(pred_name, [[]])
   end
 
-  def generate_defcore({:defpred, _defpred_metadata, [{pred_name, _metadata, defpred_args}]}) when is_list(defpred_args) and not is_list(hd(defpred_args)) do
+  def generate_defcore({:defpred, _defpred_metadata, [{pred_name, _metadata, defpred_args}]})
+      when is_list(defpred_args) and not is_list(hd(defpred_args)) do
     generate_defcore(pred_name, [defpred_args])
   end
 
@@ -70,13 +72,18 @@ defmodule LogicElixir.Defpred do
     generate_defcore(pred_name, defpred_args)
   end
 
-  def generate_defcore({:defpred, _defpred_metadata, [{pred_name, _metadata, defpred_args}, [do: do_block]]}) do
+  def generate_defcore(
+        {:defpred, _defpred_metadata, [{pred_name, _metadata, defpred_args}, [do: do_block]]}
+      ) do
     generate_defcore(pred_name, [{defpred_args, do_block}])
   end
 
-  def generate_defcore({:defpred, _defpred_metadata, [{pred_name, _metadata, defpred_args}, do_block]}) do
+  def generate_defcore(
+        {:defpred, _defpred_metadata, [{pred_name, _metadata, defpred_args}, do_block]}
+      ) do
     generate_defcore(pred_name, [{defpred_args, do_block}])
   end
+
   # End Calls used by Utils.to_defcore/1
 
   def generate_defcore(pred_name, pred_facts) do
@@ -86,9 +93,12 @@ defmodule LogicElixir.Defpred do
 
     {defcore_args, facts} =
       case pred_facts do
-        [[]] -> {[], []}
+        [[]] ->
+          {[], []}
+
         [{args, _do_block} | _] ->
           {gen_vars(args), pred_facts}
+
         _ ->
           [args0 | _] = pred_facts
           {gen_vars(args0), pred_facts}
@@ -96,7 +106,7 @@ defmodule LogicElixir.Defpred do
 
     quote do
       defcore unquote(pred_name)(unquote_splicing(defcore_args)) do
-        unquote{:choice, [], choice_block(facts, defcore_args)}
+        unquote({:choice, [], choice_block(facts, defcore_args)})
       end
     end
   end
@@ -113,14 +123,22 @@ defmodule LogicElixir.Defpred do
     # Logger.info "facts_list = #{inspect(facts_list)}"
     # Logger.info "defcore_args = #{inspect(defcore_args)}"
     choice_stmts = facts_list |> Enum.map(&choice_stmt(&1, defcore_args))
-    choice_block = case choice_stmts do
-      [] -> [do: {:__block__, [], []}]
-      [do_stmt | else_stmts] ->
-        choice_do_stmt = {:do, do_stmt}
-        choice_else_stmts = else_stmts
-                            |> Enum.map(&{:else, &1})
-        List.flatten([choice_do_stmt, choice_else_stmts])
-    end
+
+    choice_block =
+      case choice_stmts do
+        [] ->
+          [do: {:__block__, [], []}]
+
+        [do_stmt | else_stmts] ->
+          choice_do_stmt = {:do, do_stmt}
+
+          choice_else_stmts =
+            else_stmts
+            |> Enum.map(&{:else, &1})
+
+          List.flatten([choice_do_stmt, choice_else_stmts])
+      end
+
     [
       choice_block
     ]
@@ -130,10 +148,12 @@ defmodule LogicElixir.Defpred do
     # Logger.warn "CHOICE STMT"
     # Logger.info "do_block = #{inspect(do_block)}"
     {:__block__, [],
-              List.flatten([facts
-              |> Enum.zip(defcore_args)
-              |> Enum.map(fn {p, arg} -> quote do: unquote(p) = unquote(arg) end), process_block(do_block)])
-    }
+     List.flatten([
+       facts
+       |> Enum.zip(defcore_args)
+       |> Enum.map(fn {p, arg} -> quote do: unquote(p) = unquote(arg) end),
+       process_block(do_block)
+     ])}
   end
 
   defp choice_stmt(facts, defcore_args) do
@@ -141,10 +161,9 @@ defmodule LogicElixir.Defpred do
     # Logger.info "facts = #{inspect(facts)}"
     # Logger.info "defcore_args = #{inspect(defcore_args)}"
     {:__block__, [],
-              facts
-              |> Enum.zip(defcore_args)
-              |> Enum.map(fn {p, arg} -> quote do: unquote(p) = unquote(arg) end)
-    }
+     facts
+     |> Enum.zip(defcore_args)
+     |> Enum.map(fn {p, arg} -> quote do: unquote(p) = unquote(arg) end)}
   end
 
   defp process_block({:__block__, _metadata, stmt_block}) do
@@ -163,6 +182,6 @@ defmodule LogicElixir.Defpred do
 
   defp gen_vars(args) do
     1..length(args)
-    |> Enum.map(fn _x -> {:__aliases__, [], [:"#{LogicElixir.VarBuilder.gen_var}"]} end)
+    |> Enum.map(fn _x -> {:__aliases__, [], [:"#{LogicElixir.VarBuilder.gen_var()}"]} end)
   end
 end

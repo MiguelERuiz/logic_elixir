@@ -43,19 +43,22 @@ defmodule LogicElixir.Utils do
 
     case ast do
       nil ->
-        Logger.error "(to_defcore) Error: no #{pred_name} predicate found on logic template"
+        Logger.error("(to_defcore) Error: no #{pred_name} predicate found on logic template")
+
       {:defpred, _metadata, _} ->
-        ast |> LogicElixir.Defpred.generate_defcore |> Macro.to_string |> IO.puts
+        ast |> LogicElixir.Defpred.generate_defcore() |> Macro.to_string() |> IO.puts()
+
       _ ->
-        joint_args = ast
-        |> Enum.map(
-            fn {:defpred, _metadata, [{_pred_name, _metadata_pred_name, args}]} ->
-              args
-            end)
+        joint_args =
+          ast
+          |> Enum.map(fn {:defpred, _metadata, [{_pred_name, _metadata_pred_name, args}]} ->
+            args
+          end)
+
         {:defpred, [], [{pred_name, [], joint_args}]}
-        |> LogicElixir.Defpred.generate_defcore
-        |> Macro.to_string
-        |> IO.puts
+        |> LogicElixir.Defpred.generate_defcore()
+        |> Macro.to_string()
+        |> IO.puts()
     end
   end
 

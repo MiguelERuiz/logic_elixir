@@ -538,7 +538,9 @@ defmodule Example do
       th2 = Map.merge(th1, Map.new([{x1, t1}]))
 
       (fn th1 ->
-         (fn th -> unify_gen(th, {:var, x1}, LogicElixir.TermBuilder.build_tuple(var: y1, var: y2)) end).(th1)
+         (fn th ->
+            unify_gen(th, {:var, x1}, LogicElixir.TermBuilder.build_tuple(var: y1, var: y2))
+          end).(th1)
          |> Stream.flat_map(fn th2 -> (fn th -> [th] end).(th2) end)
        end).(th2)
       |> Stream.map(&Map.drop(&1, [x1, y1, y2]))
@@ -559,7 +561,10 @@ defmodule Example do
               {:var, x1},
               LogicElixir.TermBuilder.build_list(
                 {:ground, 1},
-                LogicElixir.TermBuilder.build_list({:ground, 2}, LogicElixir.TermBuilder.build_list({:ground, 3}, []))
+                LogicElixir.TermBuilder.build_list(
+                  {:ground, 2},
+                  LogicElixir.TermBuilder.build_list({:ground, 3}, [])
+                )
               )
             )
           end).(th1)
@@ -587,11 +592,17 @@ defmodule Example do
               th,
               LogicElixir.TermBuilder.build_list(
                 {:var, x1},
-                LogicElixir.TermBuilder.build_list({:var, x2}, LogicElixir.TermBuilder.build_list({:var, x3}, []))
+                LogicElixir.TermBuilder.build_list(
+                  {:var, x2},
+                  LogicElixir.TermBuilder.build_list({:var, x3}, [])
+                )
               ),
               LogicElixir.TermBuilder.build_list(
                 {:ground, 1},
-                LogicElixir.TermBuilder.build_list({:ground, 2}, LogicElixir.TermBuilder.build_list({:ground, 3}, []))
+                LogicElixir.TermBuilder.build_list(
+                  {:ground, 2},
+                  LogicElixir.TermBuilder.build_list({:ground, 3}, [])
+                )
               )
             )
           end).(th1)
@@ -619,11 +630,17 @@ defmodule Example do
               th,
               LogicElixir.TermBuilder.build_list(
                 {:var, y1},
-                LogicElixir.TermBuilder.build_list({:var, y2}, LogicElixir.TermBuilder.build_list({:var, y3}, []))
+                LogicElixir.TermBuilder.build_list(
+                  {:var, y2},
+                  LogicElixir.TermBuilder.build_list({:var, y3}, [])
+                )
               ),
               LogicElixir.TermBuilder.build_list(
                 {:ground, 1},
-                LogicElixir.TermBuilder.build_list({:ground, 2}, LogicElixir.TermBuilder.build_list({:ground, 3}, []))
+                LogicElixir.TermBuilder.build_list(
+                  {:ground, 2},
+                  LogicElixir.TermBuilder.build_list({:ground, 3}, [])
+                )
               )
             )
           end).(th1)
@@ -674,7 +691,10 @@ defmodule Example do
               LogicElixir.TermBuilder.build_list(
                 LogicElixir.TermBuilder.build_list(
                   {:ground, 1},
-                  LogicElixir.TermBuilder.build_list({:ground, 2}, LogicElixir.TermBuilder.build_list({:ground, 3}, []))
+                  LogicElixir.TermBuilder.build_list(
+                    {:ground, 2},
+                    LogicElixir.TermBuilder.build_list({:ground, 3}, [])
+                  )
                 ),
                 []
               )
@@ -778,7 +798,10 @@ defmodule Example do
             unify_gen(
               th,
               {:var, x1},
-              LogicElixir.TermBuilder.build_list(LogicElixir.TermBuilder.build_list({:ground, 1}, []), [])
+              LogicElixir.TermBuilder.build_list(
+                LogicElixir.TermBuilder.build_list({:ground, 1}, []),
+                []
+              )
             )
           end).(th1)
          |> Stream.flat_map(fn th2 -> (fn th -> [th] end).(th2) end)
@@ -795,7 +818,9 @@ defmodule Example do
       th2 = Map.merge(th1, Map.new([{x1, t1}]))
 
       (fn th1 ->
-         (fn th -> unify_gen(th, {:var, x1}, LogicElixir.TermBuilder.build_list([ground: 1], [])) end).(th1)
+         (fn th ->
+            unify_gen(th, {:var, x1}, LogicElixir.TermBuilder.build_list([ground: 1], []))
+          end).(th1)
          |> Stream.flat_map(fn th2 -> (fn th -> [th] end).(th2) end)
        end).(th2)
       |> Stream.map(&Map.drop(&1, [x1]))
