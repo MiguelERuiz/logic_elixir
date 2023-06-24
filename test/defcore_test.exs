@@ -1,12 +1,12 @@
-defmodule CoreTest do
+defmodule DefcoreTest do
   # , async: true
   use ExUnit.Case
-  doctest Core
+  doctest LogicElixir.Defcore
 
   import Template
 
   setup_all do
-    VarBuilder.start_link()
+    LogicElixir.VarBuilder.start_link()
     :ok
   end
 

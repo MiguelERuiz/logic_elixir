@@ -48,7 +48,7 @@ Copy the generated function inside a module, for instance Example module. To
 run it, just do the following steps:
 
 ```elixir
-iex(1)> VarBuilder.start_link # Start the variable generator Agent
+iex(1)> LogicElixir.VarBuilder.start_link # Start the variable generator Agent
 iex(2)> Example.pred14({:var, "X"}).(%{}) |> Enum.into([])
 [%{"X" => {:ground, 7}}]
 iex(3)>

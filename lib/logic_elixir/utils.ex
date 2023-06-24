@@ -1,4 +1,4 @@
-defmodule Utils do
+defmodule LogicElixir.Utils do
   require Logger
 
   @spec get_ast(atom()) :: nil | tuple()
@@ -33,7 +33,7 @@ defmodule Utils do
         ast |> Macro.to_string() |> IO.puts()
 
       {:defcore, _metadata, _} ->
-        ast |> Core.tr_def() |> Macro.to_string() |> IO.puts()
+        ast |> LogicElixir.Defcore.tr_def() |> Macro.to_string() |> IO.puts()
     end
   end
 
@@ -45,7 +45,7 @@ defmodule Utils do
       nil ->
         Logger.error "(to_defcore) Error: no #{pred_name} predicate found on logic template"
       {:defpred, _metadata, _} ->
-        ast |> LogicElixir.generate_defcore |> Macro.to_string |> IO.puts
+        ast |> LogicElixir.Defpred.generate_defcore |> Macro.to_string |> IO.puts
       _ ->
         joint_args = ast
         |> Enum.map(
@@ -53,7 +53,7 @@ defmodule Utils do
               args
             end)
         {:defpred, [], [{pred_name, [], joint_args}]}
-        |> LogicElixir.generate_defcore
+        |> LogicElixir.Defpred.generate_defcore
         |> Macro.to_string
         |> IO.puts
     end

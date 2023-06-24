@@ -1,13 +1,16 @@
-defmodule LogicElixirTest do
+defmodule DefpredTest do
   use ExUnit.Case
-  doctest LogicElixir
+  doctest LogicElixir.Defpred
 
   import LogicTemplate
 
   test "Checks person fact" do
-    assert person({:var, "X"}).(%{}) |> Enum.into([]) == [%{"X" => {:ground, :mike}}, %{"X" => {:ground, :sussie}}]
+    assert person({:var, "X"}).(%{}) |> Enum.into([]) == [%{"X" => {:ground, :mary}}, %{"X" => {:ground, :paul}}, %{"X" => {:ground, :john}}, %{"X" => {:ground, :mike}}, %{"X" => {:ground, :sussie}}]
     assert person({:ground, :mike}).(%{}) |> Enum.into([]) == [%{}]
     assert person({:ground, :sussie}).(%{}) |> Enum.into([]) == [%{}]
+    assert person({:ground, :paul}).(%{}) |> Enum.into([]) == [%{}]
+    assert person({:ground, :mary}).(%{}) |> Enum.into([]) == [%{}]
+    assert person({:ground, :john}).(%{}) |> Enum.into([]) == [%{}]
     assert person({:ground, :robocop}).(%{}) |> Enum.into([]) == []
   end
 

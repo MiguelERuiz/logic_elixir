@@ -9,9 +9,9 @@ defmodule LogicElixir.Supervisor do
   def init(:ok) do
     children = [
       %{
-        id: VarBuilder,
-        # start: {Agent, :start_link, [fn -> 0 end, [name: VarBuilder]]}
-        start: {VarBuilder, :start_link, []}
+        id: LogicElixir.VarBuilder,
+        # start: {Agent, :start_link, [fn -> 0 end, [name: LogicElixir.VarBuilder]]}
+        start: {LogicElixir.VarBuilder, :start_link, []}
       }
     ]
 

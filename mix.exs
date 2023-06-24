@@ -17,7 +17,7 @@ defmodule LogicElixir.MixProject do
     [
       extra_applications: [:logger],
       mod: {LogicElixir, []},
-      registered: [VarBuilder]
+      registered: [LogicElixir.VarBuilder]
     ]
   end
 

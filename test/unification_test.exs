@@ -1,8 +1,8 @@
 defmodule UnificationTest do
   use ExUnit.Case
-  doctest Unification
+  doctest LogicElixir.Unification
 
-  import Unification
+  import LogicElixir.Unification
 
   test "Verifies [ExTerm] rule" do
     assert unify({:ground, 3}, {:ground, 3}, %{}) == %{}

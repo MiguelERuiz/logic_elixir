@@ -1,4 +1,4 @@
-defmodule Unification do
+defmodule LogicElixir.Unification do
   @moduledoc """
     Documentation for Unification module
   """
@@ -145,13 +145,13 @@ defmodule Unification do
 
   defp apply_subtitution(theta, t) when is_tuple_term(t) do
     list = t |> Tuple.to_list() |> Enum.map(fn tx -> apply_subtitution(theta, tx) end)
-    TermBuilder.build_tuple(list)
+    LogicElixir.TermBuilder.build_tuple(list)
   end
 
   defp apply_subtitution(theta, [h | t]) do
     h_result = apply_subtitution(theta, h)
     t_result = apply_subtitution(theta, t)
-    TermBuilder.build_list(h_result, t_result)
+    LogicElixir.TermBuilder.build_list(h_result, t_result)
   end
 
   @spec components_of(tuple()) :: [term()]

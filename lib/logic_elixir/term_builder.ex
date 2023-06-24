@@ -1,4 +1,4 @@
-defmodule TermBuilder do
+defmodule LogicElixir.TermBuilder do
   def build_tuple(terms) do
     if Enum.all?(terms, &match?({:ground, _}, &1)) do
       {:ground,
