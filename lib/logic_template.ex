@@ -4,6 +4,10 @@ defmodule LogicTemplate do
   # TODO now we are not going to support predicates with different number of args
   # defpred likes(:tim, :rugby, 30)
 
+  #############
+  #   Facts   #
+  #############
+
   defpred person(:sussie)
 
   defpred person(:mike)
@@ -14,9 +18,13 @@ defmodule LogicTemplate do
 
   defpred person(:mary)
 
+  defpred animal(:bucky)
+
   defpred animal(:gladys)
 
   defpred likes(:sussie, :pizza)
+
+  defpred likes(:bucky, :pizza)
 
   defpred likes(:sussie, :sushi)
 
@@ -42,23 +50,27 @@ defmodule LogicTemplate do
 
   defpred is_funny(:hiking)
 
+  #############
+  #   Rules   #
+  #############
+
   defpred pizza_lover(X) do
+    person(X)
     likes(X, :pizza)
   end
 
   defpred number(X) do
     @(is_number(X))
   end
-  # TODO improve predicate. Take in mind other examples
+
   defpred siblings(X, Y) do
     father_of(Z, X)
     father_of(Z, Y)
   end
 
-  # TODO support this predicate
-  # defpred append([], Ys, Ys)
+  defpred append([], Ys, Ys)
 
-  # defpred append([X|Xs], Ys, [X|Zs]) do
-  #   append(Xs, Ys, Zs)
-  # end
+  defpred append([X|Xs], Ys, [X|Zs]) do
+    append(Xs, Ys, Zs)
+  end
 end

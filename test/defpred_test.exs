@@ -15,16 +15,16 @@ defmodule DefpredTest do
   end
 
   test "Checks animal fact" do
-    assert animal({:var, "X"}).(%{}) |> Enum.into([]) == [%{"X" => {:ground, :gladys}}]
+    assert animal({:var, "X"}).(%{}) |> Enum.into([]) == [%{"X" => {:ground, :gladys}}, %{"X" => {:ground, :bucky}}]
     assert animal({:ground, :gladys}).(%{}) |> Enum.into([]) == [%{}]
     assert animal({:ground, :pluto}).(%{}) |> Enum.into([]) == []
   end
 
   test "Checks likes fact" do
-    assert likes({:var, "X"}, {:var, "Y"}).(%{}) |> Enum.into([]) == [%{"X" => {:ground, :mike}, "Y" => {:ground, :football}}, %{"X" => {:ground, :sussie}, "Y" => {:ground, :sushi}}, %{"X" => {:ground, :sussie}, "Y" => {:ground, :pizza}}]
+    assert likes({:var, "X"}, {:var, "Y"}).(%{}) |> Enum.into([]) == [%{"X" => {:ground, :mike}, "Y" => {:ground, :football}}, %{"X" => {:ground, :sussie}, "Y" => {:ground, :sushi}}, %{"X" => {:ground, :bucky}, "Y" => {:ground, :pizza}}, %{"X" => {:ground, :sussie}, "Y" => {:ground, :pizza}}]
     assert likes({:ground, :mike}, {:var, "Y"}).(%{}) |> Enum.into([]) == [%{"Y" => {:ground, :football}}]
     assert likes({:ground, :sussie}, {:var, "Y"}).(%{}) |> Enum.into([]) == [%{"Y" => {:ground, :sushi}}, %{"Y" => {:ground, :pizza}}]
-    assert likes({:var, "X"}, {:ground, :pizza}).(%{}) |> Enum.into([]) == [%{"X" => {:ground, :sussie}}]
+    assert likes({:var, "X"}, {:ground, :pizza}).(%{}) |> Enum.into([]) == [%{"X" => {:ground, :bucky}}, %{"X" => {:ground, :sussie}}]
     assert likes({:var, "X"}, {:ground, :sushi}).(%{}) |> Enum.into([]) == [%{"X" => {:ground, :sussie}}]
     assert likes({:var, "X"}, {:ground, :football}).(%{}) |> Enum.into([]) == [%{"X" => {:ground, :mike}}]
     assert likes({:ground, :peter}, {:ground, :football}).(%{}) |> Enum.into([]) == []
@@ -80,14 +80,15 @@ defmodule DefpredTest do
     assert is_funny({:ground, :skiing}).(%{}) |> Enum.into([]) == []
   end
 
-  test "Checks pizza_lover predicate" do
+  test "Checks pizza_lover rule" do
     assert pizza_lover({:var, "X"}).(%{}) |> Enum.into([]) == [%{"X" => {:ground, :sussie}}]
     assert pizza_lover({:ground, :sussie}).(%{}) |> Enum.into([]) == [%{}]
+    assert pizza_lover({:ground, :bucky}).(%{}) |> Enum.into([]) == []
     assert pizza_lover({:ground, :mike}).(%{}) |> Enum.into([]) == []
     assert pizza_lover({:ground, :mark}).(%{}) |> Enum.into([]) == []
   end
 
-  test "Checks number predicate" do
+  test "Checks number rule" do
     assert number({:ground, 1}).(%{}) |> Enum.into([]) == [%{}]
     assert number({:ground, -200}).(%{}) |> Enum.into([]) == [%{}]
     assert number({:ground, 1.2345687}).(%{}) |> Enum.into([]) == [%{}]
@@ -96,5 +97,22 @@ defmodule DefpredTest do
     assert number({:ground, :"33"}).(%{}) |> Enum.into([]) == []
     assert catch_throw(number({:var, "X"}).(%{}) |> Enum.into([])) ==
               "#{inspect({:var, "X"})} is not bound to a fully instatiated term"
+  end
+
+  test "Checks append rule" do
+    assert append({:ground, []}, {:ground, [1]}, {:var, "X"}).(%{}) |> Enum.into([]) == [
+             %{"X" => {:ground, [1]}}
+           ]
+
+    assert append({:ground, [1, 2]}, {:ground, [3]}, {:var, "X"}).(%{}) |> Enum.into([]) ==
+             [%{"X" => {:ground, [1, 2, 3]}}]
+
+    assert append({:ground, [1]}, {:ground, []}, {:var, "X"}).(%{}) |> Enum.into([]) == [
+             %{"X" => {:ground, [1]}}
+           ]
+
+    assert append({:var, "X"}, {:ground, []}, {:ground, [1]}).(%{}) |> Enum.into([]) == [
+             %{"X" => {:ground, [1]}}
+           ]
   end
 end
