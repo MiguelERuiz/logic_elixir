@@ -1,7 +1,10 @@
 defmodule LogicElixir.Defpred do
   @moduledoc """
-  Module that provides `LogicElixir.Defpred.defpred/2` macro.
+  Module that provides `LogicElixir.Defpred.defpred` macro.
   """
+
+  require Logger
+  require IEx
 
   #########
   # Types #
@@ -17,24 +20,12 @@ defmodule LogicElixir.Defpred do
 
   defmacro defpred(head) do
     {pred_name, args_ast} = Macro.decompose_call(head)
-    quote do
-      Module.put_attribute(__MODULE__, :definitions, {unquote(pred_name), unquote(args_ast)})
-    end
+    Module.put_attribute(__CALLER__.module, :definitions, {pred_name, args_ast})
   end
 
-  defmacro defpred(head, body) do
-    # Logger.warn "defpred with do block"
+  defmacro defpred(head, [do: block]) do
     {pred_name, args_ast} = Macro.decompose_call(head)
-    # Logger.info "pred_name = #{inspect(pred_name)}"
-    # Logger.info "args_ast = #{inspect(args_ast)}"
-    # Logger.info "body = #{inspect(body)}"
-    # Logger.info "do_block = #{inspect(body[:do])}"
-    # Logger.info "caller_module = #{inspect(__CALLER__.module)}"
-    # Logger.info "caller_functions = #{inspect(__CALLER__.module.functions)}"
-    quote do
-      do_block = unquote(Macro.escape(body[:do]))
-      Module.put_attribute(__MODULE__, :definitions, {unquote(pred_name), {unquote(args_ast), do_block}})
-    end
+    Module.put_attribute(__CALLER__.module, :definitions, {pred_name, {args_ast, block}})
   end
 
   defmacro __before_compile__(env) do
@@ -48,17 +39,16 @@ defmodule LogicElixir.Defpred do
 
     # Logger.info "definitions = #{inspect(definitions)}"
     # Logger.info "grouped_defs = #{inspect(grouped_defs)}"
-    # TODO change this 2-size tuple with a 3-size tuple that contains {name, args, do_block}
     for {name, args} <- grouped_defs do
       generate_defcore(name, args)
     end
   end
 
   defmacro __using__(_options) do
+    Module.register_attribute(__CALLER__.module, :definitions, accumulate: true)
     quote do
       import unquote(__MODULE__), only: :macros
       use LogicElixir.Defcore
-      Module.register_attribute(__MODULE__, :definitions, accumulate: true)
       @before_compile unquote(__MODULE__)
     end
   end

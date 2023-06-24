@@ -2,8 +2,6 @@ defmodule LogicElixir do
   @moduledoc """
   Documentation for `LogicElixir`.
   """
-  require Logger
-  require IEx
 
   use Application
 

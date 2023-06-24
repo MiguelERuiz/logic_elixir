@@ -79,5 +79,22 @@ defmodule DefpredTest do
     assert is_funny({:ground, :hiking}).(%{}) |> Enum.into([]) == [%{}]
     assert is_funny({:ground, :skiing}).(%{}) |> Enum.into([]) == []
   end
-end
 
+  test "Checks pizza_lover predicate" do
+    assert pizza_lover({:var, "X"}).(%{}) |> Enum.into([]) == [%{"X" => {:ground, :sussie}}]
+    assert pizza_lover({:ground, :sussie}).(%{}) |> Enum.into([]) == [%{}]
+    assert pizza_lover({:ground, :mike}).(%{}) |> Enum.into([]) == []
+    assert pizza_lover({:ground, :mark}).(%{}) |> Enum.into([]) == []
+  end
+
+  test "Checks number predicate" do
+    assert number({:ground, 1}).(%{}) |> Enum.into([]) == [%{}]
+    assert number({:ground, -200}).(%{}) |> Enum.into([]) == [%{}]
+    assert number({:ground, 1.2345687}).(%{}) |> Enum.into([]) == [%{}]
+    assert number({:ground, -432.235854319}).(%{}) |> Enum.into([]) == [%{}]
+    assert number({:ground, "33"}).(%{}) |> Enum.into([]) == []
+    assert number({:ground, :"33"}).(%{}) |> Enum.into([]) == []
+    assert catch_throw(number({:var, "X"}).(%{}) |> Enum.into([])) ==
+              "#{inspect({:var, "X"})} is not bound to a fully instatiated term"
+  end
+end

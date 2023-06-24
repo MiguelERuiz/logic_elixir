@@ -51,9 +51,6 @@ defmodule LogicTemplate do
   end
   # TODO improve predicate. Take in mind other examples
   defpred siblings(X, Y) do
-    person(X)
-    person(Y)
-    person(Z)
     father_of(Z, X)
     father_of(Z, Y)
   end
