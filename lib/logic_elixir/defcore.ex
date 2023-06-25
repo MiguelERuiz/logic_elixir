@@ -276,11 +276,7 @@ defmodule LogicElixir.Defcore do
     [groundify(theta, t1) | groundify(theta, t2)]
   end
 
-  #####################
-  # Private Functions #
-  #####################
-
-  defp vars(goals) when is_list(goals) do
+  def vars(goals) when is_list(goals) do
     goals
     |> Enum.map(fn goal -> vars_in_goal(goal) end)
     |> List.flatten()
@@ -288,6 +284,10 @@ defmodule LogicElixir.Defcore do
     |> Enum.map(fn {:__aliases__, _metadata, [logic_variable]} -> logic_variable end)
     |> Enum.uniq()
   end
+
+  #####################
+  # Private Functions #
+  #####################
 
   defp vars_in_goal({:=, _metadata, [t1, t2]}) do
     terms1 = flat_terms(t1)
