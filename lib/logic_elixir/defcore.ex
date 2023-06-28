@@ -157,9 +157,6 @@ defmodule LogicElixir.Defcore do
   def tr_goal(delta, {:@, _metadata, [at_arguments]}) do
     th = Macro.unique_var(:th, __MODULE__)
 
-    Logger.info "tr_goal in @ operator"
-    Logger.info "__ENV__.module = #{inspect(__ENV__.module)}"
-
     quote do
       fn unquote(th) ->
         check_b(unquote(th), groundify(unquote(th), unquote(tr_term(delta, th, at_arguments))))
