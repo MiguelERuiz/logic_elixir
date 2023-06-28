@@ -21,6 +21,7 @@ defmodule LogicElixir do
   defmacro __using__(_params) do
     quote do
       use LogicElixir.Defpred
+      use LogicElixir.Findall
     end
   end
 end

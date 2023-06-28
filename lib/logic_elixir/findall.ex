@@ -1,8 +1,10 @@
 defmodule LogicElixir.Findall do
   @moduledoc """
-  Module that provides `LogicElixir.Defpred.findall` macro.
+  Module that provides `LogicElixir.Findall.findall/2` macro.
   """
 
+  alias LogicElixir.Defcore
+  alias LogicElixir.VarBuilder
   require Logger
 
   #########
@@ -19,7 +21,7 @@ defmodule LogicElixir.Findall do
 
   defmacro __using__(_options) do
     quote do
-      import unquote(__MODULE__)
+      import unquote(__MODULE__), only: :macros
     end
   end
 
@@ -27,24 +29,24 @@ defmodule LogicElixir.Findall do
     tr_findall(term, block)
   end
 
-  #############
-  # Functions #
-  #############
+  #####################
+  # Private Functions #
+  #####################
 
-  def tr_findall(term, do_block) do
-    Logger.info "term = #{inspect(term)}"
-    Logger.info "do_block = #{inspect(do_block)}"
+  defp tr_findall(term, do_block) do
+    # Logger.info "term = #{inspect(term)}"
+    # Logger.info "do_block = #{inspect(do_block)}"
     goals =
       case do_block do
         {:__block__, _metadata, do_stmts} -> do_stmts
         _ -> [do_block]
       end
 
-    Logger.info "goals = #{inspect(goals)}"
+    # Logger.info "goals = #{inspect(goals)}"
 
-    vars_goals = goals |> LogicElixir.Defcore.vars()
+    vars_goals = goals |> Defcore.vars()
 
-    Logger.info "vars_goals = #{inspect(vars_goals)}"
+    # Logger.info "vars_goals = #{inspect(vars_goals)}"
 
     x_list =
       case vars_goals do
@@ -64,16 +66,18 @@ defmodule LogicElixir.Findall do
     quote do
       unquote(
           {:__block__, [],
-           x_list |> Enum.map(fn x -> quote do: unquote(x) = LogicElixir.VarBuilder.gen_var() end)}
+           x_list |> Enum.map(fn x -> quote do: unquote(x) = VarBuilder.gen_var() end)}
         )
 
-      unquote(LogicElixir.Defcore.tr_goals(delta, goals)).(%{})
+      unquote(Defcore.tr_goals(delta, goals)).(%{})
         |> Stream.map(
             fn unquote(sol) ->
-              unquote(t) = unquote(LogicElixir.Defcore.tr_term(delta, sol, term))
-              LogicElixir.Defcore.groundify(unquote(sol), unquote(t))
+              unquote(t) = unquote(Defcore.tr_term(delta, sol, term))
+              Defcore.groundify(unquote(sol), unquote(t))
             end
         )
+        # TODO: ask to Manuel if this may be part of the findall/2 macro
+        # |> Enum.into([])
     end
 
   end

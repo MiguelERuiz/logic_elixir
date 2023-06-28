@@ -3,8 +3,7 @@ defmodule LogicElixir.Defpred do
   Module that provides `LogicElixir.Defpred.defpred` macro.
   """
 
-  require Logger
-  require IEx
+  alias LogicElixir.VarBuilder
 
   #########
   # Types #
@@ -32,7 +31,7 @@ defmodule LogicElixir.Defpred do
     # TODO On first `iex -S mix` command, this line is necessary,
     # otherwise application crashes. Probably this is due to
     # LogicElixir.VarBuilder's Agent nature.
-    LogicElixir.VarBuilder.start_link()
+    VarBuilder.start_link()
 
     definitions = Module.get_attribute(env.module, :definitions)
     grouped_defs = definitions |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
@@ -182,6 +181,6 @@ defmodule LogicElixir.Defpred do
 
   defp gen_vars(args) do
     1..length(args)
-    |> Enum.map(fn _x -> {:__aliases__, [], [:"#{LogicElixir.VarBuilder.gen_var()}"]} end)
+    |> Enum.map(fn _x -> {:__aliases__, [], [:"#{VarBuilder.gen_var()}"]} end)
   end
 end

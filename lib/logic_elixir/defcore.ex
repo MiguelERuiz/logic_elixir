@@ -1,8 +1,10 @@
 defmodule LogicElixir.Defcore do
   @moduledoc """
-  Module that provides `LogicElixir.Defpred.defmacro/2` macro.
+  Module that provides `LogicElixir.Defpred.defcore/2` macro.
   """
-  import LogicElixir.Unification, only: [unify: 3]
+  alias LogicElixir.TermBuilder
+  import LogicElixir.Unification
+  alias LogicElixir.VarBuilder
   require Logger
 
   #########
@@ -86,12 +88,12 @@ defmodule LogicElixir.Defcore do
       def unquote({predicate_name, [], t_list}) do
         unquote(
           {:__block__, [],
-           x_list |> Enum.map(fn x -> quote do: unquote(x) = LogicElixir.VarBuilder.gen_var() end)}
+           x_list |> Enum.map(fn x -> quote do: unquote(x) = VarBuilder.gen_var() end)}
         )
 
         unquote(
           {:__block__, [],
-           y_list |> Enum.map(fn y -> quote do: unquote(y) = LogicElixir.VarBuilder.gen_var() end)}
+           y_list |> Enum.map(fn y -> quote do: unquote(y) = VarBuilder.gen_var() end)}
         )
 
         fn th1 ->
@@ -155,6 +157,9 @@ defmodule LogicElixir.Defcore do
   def tr_goal(delta, {:@, _metadata, [at_arguments]}) do
     th = Macro.unique_var(:th, __MODULE__)
 
+    Logger.info "tr_goal in @ operator"
+    Logger.info "__ENV__.module = #{inspect(__ENV__.module)}"
+
     quote do
       fn unquote(th) ->
         check_b(unquote(th), groundify(unquote(th), unquote(tr_term(delta, th, at_arguments))))
@@ -182,7 +187,7 @@ defmodule LogicElixir.Defcore do
   # This matches tuples of size != 2. Issue the command "h Kernel.SpecialForms.{}"
   def tr_term(delta, x, {:{}, _metadata, elements}) do
     list = elements |> Enum.map(fn tx -> tr_term(delta, x, tx) end)
-    Macro.escape(LogicElixir.TermBuilder.build_tuple(list))
+    Macro.escape(TermBuilder.build_tuple(list))
   end
 
   def tr_term(delta, x, {function_name, _metadata, arguments}) do
@@ -220,19 +225,19 @@ defmodule LogicElixir.Defcore do
   def tr_term(delta, x, [{:|, _metadata, [t, sublist]}]) do
     head = tr_term(delta, x, t)
     tail = tr_term(delta, x, sublist)
-    quote do: LogicElixir.TermBuilder.build_list(unquote(head), unquote(tail))
+    quote do: TermBuilder.build_list(unquote(head), unquote(tail))
   end
 
   def tr_term(delta, x, [h | t]) do
     head = tr_term(delta, x, h)
     tail = tr_term(delta, x, t)
-    quote do: LogicElixir.TermBuilder.build_list(unquote(head), unquote(tail))
+    quote do: TermBuilder.build_list(unquote(head), unquote(tail))
   end
 
   # This matches tuples with size == 2
   def tr_term(delta, x, tuple) when is_tuple(tuple) do
     list = tuple |> Tuple.to_list() |> Enum.map(fn tx -> tr_term(delta, x, tx) end)
-    quote do: unquote(LogicElixir.TermBuilder.build_tuple(list))
+    quote do: unquote(TermBuilder.build_tuple(list))
   end
 
   def tr_term(_delta, _x, lit), do: {:ground, lit}
