@@ -73,4 +73,13 @@ defmodule LogicTemplate do
   defpred append([X|Xs], Ys, [X|Zs]) do
     append(Xs, Ys, Zs)
   end
+
+  defpred is_ordered([])
+
+  defpred is_ordered([X | []])
+
+  defpred is_ordered([X | [Y | Ys]]) do
+    @(X <= Y)
+    is_ordered([Y | Ys])
+  end
 end
