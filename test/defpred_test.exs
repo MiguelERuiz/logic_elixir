@@ -182,4 +182,14 @@ defmodule DefpredTest do
              %{"X" => {:ground, [1]}}
            ]
   end
+
+  test "Checks is_ordered rule" do
+    assert is_ordered({:ground, []}).(%{}) |> Enum.into([]) == [%{}]
+    assert is_ordered({:ground, [1]}).(%{}) |> Enum.into([]) == [%{}]
+    assert is_ordered({:ground, [1, 2]}).(%{}) |> Enum.into([]) == [%{}]
+    assert is_ordered({:ground, [1, 3]}).(%{}) |> Enum.into([]) == [%{}]
+    assert is_ordered({:ground, [1, 2, 3]}).(%{}) |> Enum.into([]) == [%{}]
+    assert is_ordered({:ground, [1, 3, 2]}).(%{}) |> Enum.into([]) == []
+    assert is_ordered({:ground, 1..100 |> Enum.to_list()}).(%{}) |> Enum.into([]) == [%{}]
+  end
 end
