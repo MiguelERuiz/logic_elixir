@@ -66,6 +66,7 @@ defmodule LogicTemplate do
   defpred siblings(X, Y) do
     father_of(Z, X)
     father_of(Z, Y)
+    @(X < Y) # @(X != Y)
   end
 
   defpred append([], Ys, Ys)
