@@ -33,7 +33,7 @@ defmodule LogicElixir.Defpred do
     # LogicElixir.VarBuilder's Agent nature.
     VarBuilder.start_link()
 
-    definitions = Module.get_attribute(env.module, :definitions)
+    definitions = Module.get_attribute(env.module, :definitions) |> Enum.reverse()
     grouped_defs = definitions |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
 
     # Logger.info "definitions = #{inspect(definitions)}"

@@ -76,8 +76,6 @@ defmodule LogicElixir.Findall do
               Defcore.groundify(unquote(sol), unquote(t))
             end
         )
-        # TODO: ask to Manuel if this may be part of the findall/2 macro
-        # |> Enum.into([])
     end
 
   end
