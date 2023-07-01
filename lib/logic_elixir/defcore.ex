@@ -179,7 +179,11 @@ defmodule LogicElixir.Defcore do
   #  Terms  #
   ###########
 
-  def tr_term(delta, _x, {:__aliases__, _metadata, [logic_var]}), do: {:var, delta[logic_var]}
+  def tr_term(delta, _x, {:__aliases__, _metadata, [logic_var]}) do
+    # TODO ask Manu if this is a good approach
+    # Previous line was {:var, delta[logic_var]}
+    {:var, Map.get(delta, logic_var, logic_var |> Atom.to_string)}
+  end
 
   # This matches tuples of size != 2. Issue the command "h Kernel.SpecialForms.{}"
   def tr_term(delta, x, {:{}, _metadata, elements}) do
@@ -256,15 +260,11 @@ defmodule LogicElixir.Defcore do
 
   def groundify(_theta, {:ground, t}), do: t
 
-  def groundify(theta, {:var, x}) when is_map_key(theta, x) do
-    case theta[x] do
+  def groundify(theta, {:var, x}) do
+    case Map.get(theta, x, {:var, x}) do
       {:ground, t} -> t
-      _ -> throw("#{inspect(theta[x])} is not bound to a fully instatiated term")
+      {:var, x} -> throw("#{x} is not instantiated")
     end
-  end
-
-  def groundify(_theta, {:var, x}) do
-    throw("#{x} is not instantiated")
   end
 
   def groundify(theta, t) when is_tuple(t) do

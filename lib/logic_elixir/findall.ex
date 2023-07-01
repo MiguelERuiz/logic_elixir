@@ -34,7 +34,8 @@ defmodule LogicElixir.Findall do
   #####################
 
   defp tr_findall(term, do_block) do
-    # Logger.info "term = #{inspect(term)}"
+    Logger.warn "tr_findall/2"
+    Logger.info "term = #{inspect(term)}"
     # Logger.info "do_block = #{inspect(do_block)}"
     goals =
       case do_block do
@@ -55,7 +56,7 @@ defmodule LogicElixir.Findall do
 
         _ ->
           1..length(vars_goals)
-          |> Enum.map(fn y -> String.to_atom("x#{y}") |> Macro.unique_var(__MODULE__) end)
+          |> Enum.map(fn x -> String.to_atom("x#{x}") |> Macro.unique_var(__MODULE__) end)
       end
 
     delta = Enum.zip(vars_goals, x_list) |> Enum.into(%{})
@@ -63,7 +64,7 @@ defmodule LogicElixir.Findall do
     sol = Macro.unique_var(:sol, __MODULE__)
     t = Macro.unique_var(:t, __MODULE__)
 
-    quote do
+    ast = quote do
       unquote(
           {:__block__, [],
            x_list |> Enum.map(fn x -> quote do: unquote(x) = VarBuilder.gen_var() end)}
@@ -78,5 +79,8 @@ defmodule LogicElixir.Findall do
         )
     end
 
+    # ast |> Macro.to_string |> IO.puts
+
+    ast
   end
 end

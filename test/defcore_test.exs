@@ -270,7 +270,7 @@ defmodule DefcoreTest do
     assert pred30({:ground, 3}).(%{}) |> Enum.into([]) == [%{}]
 
     assert catch_throw(pred30({:var, "X"}).(%{}) |> Enum.into([])) ==
-             "#{inspect({:var, "X"})} is not bound to a fully instatiated term"
+             "#{"X"} is not instantiated"
   end
 
   test "Checks pred31" do
