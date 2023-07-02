@@ -36,8 +36,6 @@ defmodule LogicElixir.Defpred do
     definitions = Module.get_attribute(env.module, :definitions) |> Enum.reverse()
     grouped_defs = definitions |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
 
-    # Logger.info "definitions = #{inspect(definitions)}"
-    # Logger.info "grouped_defs = #{inspect(grouped_defs)}"
     for {name, args} <- grouped_defs do
       generate_defcore(name, args)
     end
@@ -86,10 +84,6 @@ defmodule LogicElixir.Defpred do
   # End Calls used by Utils.to_defcore/1
 
   def generate_defcore(pred_name, pred_facts) do
-    # Logger.warn "GENERATE DEFCORE!!"
-    # Logger.info "pred_name = #{inspect(pred_name)}"
-    # Logger.info "pred_facts = #{inspect(pred_facts)}"
-
     {defcore_args, facts} =
       case pred_facts do
         [[]] ->
@@ -118,9 +112,6 @@ defmodule LogicElixir.Defpred do
   # Private Functions #
   #####################
   defp choice_block(facts_list, defcore_args) do
-    # Logger.warn "CHOICE_BLOCK"
-    # Logger.info "facts_list = #{inspect(facts_list)}"
-    # Logger.info "defcore_args = #{inspect(defcore_args)}"
     choice_stmts = facts_list |> Enum.map(&choice_stmt(&1, defcore_args))
 
     choice_block =
@@ -144,8 +135,6 @@ defmodule LogicElixir.Defpred do
   end
 
   defp choice_stmt({facts, do_block}, defcore_args) do
-    # Logger.warn "CHOICE STMT"
-    # Logger.info "do_block = #{inspect(do_block)}"
     {:__block__, [],
      List.flatten([
        facts
@@ -156,9 +145,6 @@ defmodule LogicElixir.Defpred do
   end
 
   defp choice_stmt(facts, defcore_args) do
-    # Logger.warn "CHOICE_STMT"
-    # Logger.info "facts = #{inspect(facts)}"
-    # Logger.info "defcore_args = #{inspect(defcore_args)}"
     {:__block__, [],
      facts
      |> Enum.zip(defcore_args)
@@ -166,14 +152,10 @@ defmodule LogicElixir.Defpred do
   end
 
   defp process_block({:__block__, _metadata, stmt_block}) do
-    # Logger.warn "PROCESS BLOCK"
-    # Logger.info "do_block = #{inspect(do_block)}"
     stmt_block
   end
 
   defp process_block(stmt) do
-    # Logger.warn "PROCESS BLOCK OTHERWISE"
-    # Logger.info "stmt = #{inspect(stmt)}"
     [stmt]
   end
 

@@ -37,7 +37,6 @@ defmodule LogicElixir.Findall do
   #####################
 
   defp tr_findall(term, do_block, into_block \\ nil) do
-
     goals =
       case do_block do
         {:__block__, _metadata, do_stmts} -> do_stmts
@@ -63,17 +62,16 @@ defmodule LogicElixir.Findall do
 
     quote do
       unquote(
-          {:__block__, [],
-           x_list |> Enum.map(fn x -> quote do: unquote(x) = VarBuilder.gen_var() end)}
-        )
+        {:__block__, [],
+         x_list |> Enum.map(fn x -> quote do: unquote(x) = VarBuilder.gen_var() end)}
+      )
 
-      solutions = unquote(Defcore.tr_goals(delta, goals)).(%{})
-        |> Stream.map(
-            fn unquote(sol) ->
-              unquote(t) = unquote(Defcore.tr_term(delta, sol, term))
-              Defcore.groundify(unquote(sol), unquote(t))
-            end
-        )
+      solutions =
+        unquote(Defcore.tr_goals(delta, goals)).(%{})
+        |> Stream.map(fn unquote(sol) ->
+          unquote(t) = unquote(Defcore.tr_term(delta, sol, term))
+          Defcore.groundify(unquote(sol), unquote(t))
+        end)
 
       case unquote(into_block) do
         nil -> solutions
