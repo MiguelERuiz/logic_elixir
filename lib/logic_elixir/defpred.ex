@@ -151,13 +151,9 @@ defmodule LogicElixir.Defpred do
      |> Enum.map(fn {p, arg} -> quote do: unquote(p) = unquote(arg) end)}
   end
 
-  defp process_block({:__block__, _metadata, stmt_block}) do
-    stmt_block
-  end
+  defp process_block({:__block__, _metadata, stmt_block}), do: stmt_block
 
-  defp process_block(stmt) do
-    [stmt]
-  end
+  defp process_block(stmt), do: [stmt]
 
   defp gen_vars([]), do: []
 
