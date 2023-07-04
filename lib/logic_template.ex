@@ -66,11 +66,21 @@ defmodule LogicTemplate do
   defpred siblings(X, Y) do
     father_of(Z, X)
     father_of(Z, Y)
+    @(X < Y) # @(X != Y)
   end
 
   defpred append([], Ys, Ys)
 
   defpred append([X|Xs], Ys, [X|Zs]) do
     append(Xs, Ys, Zs)
+  end
+
+  defpred is_ordered([])
+
+  defpred is_ordered([X | []])
+
+  defpred is_ordered([X | [Y | Ys]]) do
+    @(X <= Y)
+    is_ordered([Y | Ys])
   end
 end
