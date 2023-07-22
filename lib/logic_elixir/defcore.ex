@@ -180,8 +180,6 @@ defmodule LogicElixir.Defcore do
   ###########
 
   def tr_term(delta, _x, {:__aliases__, _metadata, [logic_var]}) do
-    # TODO ask Manu if this is a good approach
-    # Previous line was {:var, delta[logic_var]}
     {:var, Map.get(delta, logic_var, logic_var |> Atom.to_string())}
   end
 
