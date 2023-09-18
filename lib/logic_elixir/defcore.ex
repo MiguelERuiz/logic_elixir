@@ -189,6 +189,10 @@ defmodule LogicElixir.Defcore do
     Macro.escape(TermBuilder.build_tuple(list))
   end
 
+  def tr_term(_delta, _x, {variable, _metadata, nil}) do
+    quote do: {:ground, unquote(Macro.var(variable, nil))}
+  end
+
   def tr_term(delta, x, {function_name, _metadata, arguments}) do
     x_args =
       case arguments do
