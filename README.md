@@ -1,11 +1,10 @@
 # LogicElixir
 
-**TODO: Add description**
+A DSL to write logic programs in Elixir
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `logic_elixir` to your list of dependencies in `mix.exs`:
+Add `:logic_elixir` to the list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
@@ -15,41 +14,166 @@ def deps do
 end
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/logic_elixir>.
+After that, run `mix deps.get`
 
-## Debugging defcore
+## How to use
 
-`defcore` macro generates an Elixir function. This function returns a lambda function that receives an empty substitution - which is %{} - and returns the
-following results:
-
-- `[]`, which represents `false` in Prolog.
-- `[%{}]`, which represents `true` in Prolog.
-- Otherwise, it returns a list with an unique element which contains the possible
-substitutions of all the variables.
-
-Since it's possible to want to know the format of the functions themselves, it's
-possible to do it with the `Core.trace_defcore` function, which receives the
-AST of the defcore function and returns the Elixir function we are going to run.
-
-Below there is an example of how to use it:
+Declare the `use LogicElixir` expression inside your module, as below:
 
 ```elixir
-iex(1)> ast = quote do
-...(1)> defcore pred14(X) do
-...(1)>     X = f(3, 4)
-...(1)>   end
-...(1)> end
-iex(2)> ast |> Core.trace_defcore
+defmodule LogicModule do
+  use LogicElixir
+
+  defpred p(5)
+end
 ```
 
-Copy the generated function inside a module, for instance Example module. To
-run it, just do the following steps:
+### Supported terms
+
+This version supports a reduced set of Elixir terms and must be used as follows:
 
 ```elixir
-iex(1)> LogicElixir.VarBuilder.start_link # Start the variable generator Agent
-iex(2)> Example.pred14({:var, "X"}).(%{}) |> Enum.into([])
-[%{"X" => {:ground, 7}}]
-iex(3)>
+  LogicElixir.t() :: integer()
+                    | atom()
+                    | float()
+                    | tuple()
+                    | [t()]
+```
+
+Keep in mind that uppercase atoms such as `X`, `Character`, etc. are used to
+represent logic variables.
+
+### Declaring predicates
+
+`LogicElixir` offers `defpred` macro to declare your logic predicates, and
+supports both declaring logic facts and rules, as the following examples:
+
+```elixir
+defmodule MiddleEarth do
+  use LogicElixir
+
+  # Facts
+  defpred hobbit(:frodo)
+  defpred hobbit(:sam)
+  defpred hobbit(:bilbo)
+
+  defpred wizard(:gandalf)
+  defpred wizard(:saruman)
+
+  defpred elf(:legolas)
+
+  # Rules
+
+  defpred fellow(X) do
+    # To make a disjunction of goals, use `choice` operator
+    choice do
+      X = :frodo # Unification of LogicElixir terms
+    else
+      X = :sam
+    else
+      X = :legolas
+    else
+      X = :gandalf
+    end
+  end
+
+  # Predicates to operate with data structures
+
+  defpred append([], Ys, Ys)
+
+  defpred append([X|Xs], Ys, [X|Zs]) do
+    append(Xs, Ys, Zs)
+  end
+
+  defpred is_ordered([])
+
+  defpred is_ordered([X | []])
+
+  defpred is_ordered([X | [Y | Ys]]) do
+    @(X <= Y)               # Elixir expression evaluation with @ operator
+    is_ordered([Y | Ys])
+  end
+end
+```
+
+A full repository with examples can be found [here](https://github.com/MiguelERuiz/logic_elixir_examples)
+
+### Querying predicates
+
+`LogicElixir` offers `findall` macro to make queries of your logic predicates.
+This macro receives three arguments:
+
+- A `LogicElixir` term
+- A `LogicElixir` goal sequence
+- An optional `Enumerable` term to get the results of the query
+
+`findall` outputs a Stream with the solution of the query or the result inside
+the optional `Enumerable` term. Here there are examples of declaring this macro:
+
+```elixir
+  findall Hobbit, do: hobbit(Hobbit) # without optional Enumerable term
+  findall X do
+    hobbit(X)
+    fellow(X)
+  end
+  findall X, into: [], do: (hobbit(X) ; fellow(X))
+  findall Hobbit, into: [], do: hobbit(Hobbit)
+```
+
+It's useful to encapsulate this macro inside an Elixir function to get the
+results, as the following examples:
+
+```elixir
+defmodule MiddleEarth do
+  use LogicElixir
+  # ...
+  def hobbits do
+    findall Hobbit, do: hobbit(Hobbit)
+  end
+end
+```
+
+If you open an `iex -S mix` session, you can get the result:
+
+```elixir
+  iex(1)> MiddleEarth.hobbits
+  #Stream<[
+  enum: #Function<60.124013645/2 in Stream.transform/3>,
+  funs: [#Function<48.124013645/1 in Stream.map/2>]
+  ]>
+  iex(2)> MiddleEarth.hobbits |> Enum.take(1)
+  [:frodo]
+```
+
+Besides, you can declare Elixir functions that receive arguments and use it
+inside:
+
+```elixir
+defmodule LogicLists do
+  use LogicElixir
+
+  defpred append([], Ys, Ys)
+
+  defpred append([X|Xs], Ys, [X|Zs]) do
+    append(Xs, Ys, Zs)
+  end
+
+  def pairs_of_lists(x) do
+    (findall {X, Y}, into: [], do: append(X, Y, x))
+  end
+end
+```
+
+Again, you can test it in your Elixir shell:
+
+```elixir
+  iex(1)> LogicLists.pairs_of_lists([1,2,3,4,5])
+  [
+    {[], [1, 2, 3, 4, 5]},
+    {[1], [2, 3, 4, 5]},
+    {[1, 2], [3, 4, 5]},
+    {[1, 2, 3], [4, 5]},
+    {[1, 2, 3, 4], [5]},
+    {[1, 2, 3, 4, 5], []}
+  ]
 ```
