@@ -9,12 +9,12 @@ Add `:logic_elixir` to the list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:logic_elixir, "~> 0.1.0"}
+     {:logic_elixir, git: "git@github.com:MiguelERuiz/logic_elixir.git", tag: "0.1.0"}
   ]
 end
 ```
 
-After that, run `mix deps.get`
+After that, run `mix deps.get` and `mix compile`
 
 ## How to use
 
