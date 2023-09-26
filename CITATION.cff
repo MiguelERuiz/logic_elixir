@@ -1,0 +1,8 @@
+cff-version: 1.2.0
+message: "LogicElixir, a DSL to write logic programs in Elixir"
+authors:
+  - family-names: Ruiz Nieto
+    given-names: Miguel Emilio
+title: "LogicElixir repository"
+version: 0.1.0
+date-released: 2023-09-25
